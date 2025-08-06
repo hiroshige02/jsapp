@@ -1,0 +1,59 @@
+networks:
+  # web_net:
+  backend_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.100.0/24
+volumes:
+  db_store:
+
+services:
+  front:
+    container_name: front
+    build:
+      dockerfile: ./docker/front/Dockerfile.dev
+      # dockerfile: ./docker/front/Dockerfile.prod
+    env_file: ./docker/front/.env
+    volumes: 
+      - ./front:/app
+
+    ports:
+      - "5173:5173"
+      # - "80:80"
+    networks:
+      - backend_net
+
+  api:
+    container_name: api
+    build:
+      dockerfile: ./docker/api/Dockerfile.dev
+      # dockerfile: ./docker/api/Dockerfile.prod
+    env_file: ./docker/api/.env
+
+    volumes:
+      - ./api:/app
+    ports:
+      - "3000:3000"
+      - "3333:3333"
+      - "5555:5555"
+    depends_on:
+      - db
+    networks:
+      backend_net:
+        ipv4_address: 192.168.100.10
+  db:
+    container_name: db
+    build:
+      dockerfile: ./docker/db/Dockerfile
+    env_file: ./docker/db/.env
+    volumes:
+      - db_store:/var/lib/postgresql/data
+      # - ./docker/db/postgresql.conf:/etc/postgresql/postgresql.conf
+    ports:
+      - "5432:5432"
+    tty: true
+    networks:
+      backend_net:
+        ipv4_address: 192.168.100.100

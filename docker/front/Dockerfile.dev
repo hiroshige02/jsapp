@@ -1,0 +1,19 @@
+FROM node:24-bullseye-slim
+
+# 環境変数設定
+ENV NODE_ENV="development"
+
+# アプリケーションディレクトリを作成する
+WORKDIR /app
+
+COPY ./front .
+COPY ./packages ../packages
+
+RUN apt update && \
+    apt install -y build-essential python3 # argon2導入のため
+# RUNはimageのビルド時に実行
+RUN npm install 
+
+# CMDはコンテナの起動時に実行されるデフォルトコマンド
+CMD [ "npm", "run", "dev"]
+# CMD [ "tail", "-f", "/dev/null" ]

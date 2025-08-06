@@ -1,0 +1,33 @@
+# build stage
+FROM node:24-bullseye-slim AS builder
+
+# 環境変数設定
+ENV NODE_ENV="production"
+
+# アプリケーションディレクトリを作成する
+WORKDIR /app
+
+# COPY ./front/package*.json .
+COPY front .
+COPY ./packages ../packages
+
+# RUNはimageのビルド時に実行
+RUN apt update && \
+    apt install -y build-essential python3 # argon2導入のため
+
+RUN npm install 
+
+RUN npm run build
+
+# deploy stage
+FROM nginx:1.28
+WORKDIR /usr/share/nginx/html
+RUN rm -rf ./*
+
+COPY --from=builder /app/dist .
+
+RUN rm -rf /etc/nginx/conf.d/
+COPY docker/front/nginx.conf /etc/nginx/conf.d/
+
+# CMDはコンテナの起動時に実行されるデフォルトコマンド
+CMD ["nginx", "-g", "daemon off;"]

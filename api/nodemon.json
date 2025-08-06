@@ -1,0 +1,5 @@
+{
+  "ext": "ts json",
+  "ignore": ["dist", "node_modules"],
+  "exec": "tsx watch ./src/index.ts"
+}

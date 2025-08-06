@@ -1,0 +1,14 @@
+FROM node:24-bullseye-slim
+
+# 環境変数設定
+ENV NODE_ENV="development"
+
+# アプリケーションディレクトリを作成する
+WORKDIR /app
+
+# アプリケーションの依存関係をインストールする
+COPY ./api .
+COPY ./packages ../packages
+RUN npm install
+
+CMD ["sh", "-c", "npm run dev"]

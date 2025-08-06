@@ -1,0 +1,10 @@
+**/.env*
+**/node_modules
+**/dist
+generated
+**/_*
+
+# shared_config/.prettierrc.jsonを共有
+front/.prettierrc.json
+api/.prettierrc.json
+packages/.prettierrc.json
