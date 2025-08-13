@@ -21,7 +21,25 @@ model User {
   email String @db.VarChar(255) @unique
   password String @db.VarChar(255)
   isMfaActive Boolean @default(false) @map("is_mfa_active")
+  isFido2Active Boolean @default(false) @map("is_fido2_active")
   twoFactorSecret String? @map("two_factor_secret")
+  passKeys Passkey[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+}
+
+model Passkey {
+  id String @id @db.VarChar(255)
+  publicKey Bytes @db.ByteA @map("public_key")
+  userId Int @map("user_id")
+  user User @relation(fields: [userId], references: [id])
+  webAuthnUserID String @db.VarChar(255) @map("web_authn_user_id")
+  counter Int
+  backupEligible Boolean @default(false) @map("backup_eligible")
+  backupStatus Boolean @default(false) @map("backup_status") 
+  transports String? @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  lastUsed DateTime? @updatedAt @map("last_used")
+  deletedAt DateTime? @map("deleted_at")
 }

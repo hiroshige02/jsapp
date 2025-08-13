@@ -115,6 +115,7 @@ const InputCode: FC = () => {
       });
 
       const apiUrl = toLogin ? "totp_login" : "auth/2fa/verify";
+      const redirectUrl = toLogin ? "/home" : "/auth_config";
 
       // 入力コード送信
       const res = await postMethod<CodeSchema>(codes, apiUrl);
@@ -131,7 +132,7 @@ const InputCode: FC = () => {
           // TOTP設定時
           alert(resJson.message);
         }
-        navigate("/home");
+        navigate(redirectUrl);
         return;
       }
 
@@ -144,6 +145,7 @@ const InputCode: FC = () => {
         ]);
       } else if (res.status === 500) {
         alert(resJson.message);
+        navigate(toLogin ? "/login" : "/input_code");
       } else {
         handleError(resJson);
       }
@@ -221,6 +223,17 @@ const InputCode: FC = () => {
                   <RouterLink to="/totp_setup">
                     <Box as="span" color={"blue.400"}>
                       TOTP setup
+                    </Box>
+                  </RouterLink>
+                </Text>
+              </Stack>
+            )}
+            {toLogin && (
+              <Stack pt={6}>
+                <Text>
+                  <RouterLink to="/login">
+                    <Box as="span" color={"blue.400"}>
+                      Return to Log in?{" "}
                     </Box>
                   </RouterLink>
                 </Text>

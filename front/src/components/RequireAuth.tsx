@@ -26,10 +26,12 @@ const RequireAuth: FC<Props> = ({ children }) => {
 
   // 認証済でない時はログイン画面に戻る
   if (!authChecking && !authUser && needAuthPath) {
+    // console.log("@@@@@@@ RETURN TO LOGIN @@@@@@@");
     return <Navigate to="/login" replace />;
   }
   // 認証済の時、ログイン画面とユーザー登録画面には遷移できない
   if (!authChecking && authUser && !needAuthPath) {
+    // console.log("@@@@@@@ TO HOME @@@@@@@");
     return <Navigate to="/home" replace />;
   }
 

@@ -26,6 +26,7 @@ import {
   LoadingContext,
 } from "@/providers/LoadingProvider";
 import { messages } from "@packages/shared";
+import { NavLink } from "react-router-dom";
 
 // ユーザー登録
 const Register: FC = () => {
@@ -97,9 +98,6 @@ const Register: FC = () => {
           <Heading fontSize={"4xl"} textAlign={"center"}>
             Sign up
           </Heading>
-          <Text fontSize={"lg"} color={"gray.600"}>
-            to enjoy all of our cool features ✌️
-          </Text>
         </Stack>
         <form onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
           <Box rounded={"lg"} bg="white" boxShadow={"lg"} p={8}>
@@ -242,9 +240,11 @@ const Register: FC = () => {
               <Stack pt={6}>
                 <Text>
                   Already a user?{" "}
-                  <Link color={"blue.400"} href="/login">
-                    Login
-                  </Link>
+                  <NavLink to="/login">
+                    <Text as="span" color={"blue.400"}>
+                      Login
+                    </Text>
+                  </NavLink>
                 </Text>
               </Stack>
             </Stack>

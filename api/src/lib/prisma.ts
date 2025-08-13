@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-let prisma: PrismaClient | null = null;
+let prisma: PrismaClient;
 
 try {
   prisma = new PrismaClient();

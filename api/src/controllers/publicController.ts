@@ -6,6 +6,8 @@ import { User } from "@prisma/client";
 import { cookieConfig } from "@/config/passportConfig";
 import { messages } from "@packages/shared";
 import speakeasy from "speakeasy";
+import { jwtVerify, loginJwtSign } from "@/lib/jwt";
+import { findUser } from "@/lib/prismaUser";
 
 // ユーザー登録
 export const register = async (req: Request, res: Response) => {
@@ -29,11 +31,7 @@ export const login = async (req: Request, res: Response) => {
 
   if (!user.isMfaActive) {
     // MFA設定なし
-    const jwtToken = jwt.sign(
-      { sub: user.id },
-      process.env.JWT_SECRET!,
-      { expiresIn: "1hr" }!
-    );
+    const jwtToken = loginJwtSign({ sub: user.id });
     res.cookie("token", jwtToken, cookieConfig);
   } else {
     // MFA設定あり
@@ -49,35 +47,21 @@ export const login = async (req: Request, res: Response) => {
   res.status(200).json({
     message: "",
     totpRequire: user.isMfaActive,
-    user: user.isMfaActive
-      ? null
-      : {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          isMfaActive: user.isMfaActive,
-        },
+    user: user.isMfaActive ? null : user,
   });
 };
 
 // TOTPコード認証
 export const totpLogin = async (req: Request, res: Response) => {
   try {
-    const tmpToken = req.cookies?.tmpToken;
+    const tmpToken = req.signedCookies?.tmpToken;
     if (!tmpToken) {
       res.status(500).json({ message: "パスワードログインが必要です" });
       return;
     }
 
     const jwtPayload = jwt.verify(tmpToken, process.env.JWT_TMP_SECRET!);
-    // console.log(jwtPayload);
-
-    const userId = Number(jwtPayload.sub);
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
+    const user = await findUser(Number(jwtPayload.sub));
 
     if (!user || !user.twoFactorSecret) {
       res.status(500).json({ message: "不正な操作です" });
@@ -91,6 +75,7 @@ export const totpLogin = async (req: Request, res: Response) => {
       secret: secret,
       encoding: "base32",
       token,
+      window: 1, // 1スロット(±30秒)のずれの許容
     });
 
     console.log("token: ", token);
@@ -98,20 +83,12 @@ export const totpLogin = async (req: Request, res: Response) => {
     console.log("verified: ", verified);
 
     if (verified) {
-      const jwtToken = jwt.sign({ sub: user.id }, process.env.JWT_SECRET!, {
-        expiresIn: "1hr",
-      });
-
+      const jwtToken = loginJwtSign({ sub: user.id });
       res.cookie("token", jwtToken, cookieConfig);
       res.clearCookie("tmpToken", cookieConfig);
       res.status(200).json({
         message: "2FA successful",
-        user: {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          isMfaActive: user.isMfaActive,
-        },
+        user,
       });
     } else {
       res.status(400).json({ message: messages.authFailed });
@@ -124,22 +101,19 @@ export const totpLogin = async (req: Request, res: Response) => {
 
 // 認証チェック
 export const check = async (req: Request, res: Response) => {
-  const token = req.cookies?.token;
-  //   console.log("token: ", token);
-
   try {
-    jwt.verify(token, process.env.JWT_SECRET!);
-    res.status(200).json({ message: "Auth check success" });
-  } catch (error) {
-    res.status(401).json({
-      message: "Auth check failed",
-      error,
-    });
-  }
-};
+    const jwtPayload = jwtVerify(req);
+    if (!jwtPayload)
+      return res.status(400).json({ message: messages.authFailed });
 
-// ログアウト
-export const logout = async (req: Request, res: Response) => {
-  res.clearCookie("token", cookieConfig);
-  res.status(200).json({ message: "Logout successfully" });
+    const user = await findUser(Number(jwtPayload.sub));
+    if (!user) return res.status(400).json({ message: messages.authFailed });
+
+    res.status(200).json({
+      message: "Auth check success",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: messages.serverError });
+  }
 };

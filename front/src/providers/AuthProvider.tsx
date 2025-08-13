@@ -5,28 +5,26 @@ import { useCheckAuth } from "@/hooks/useCheckAuth";
  * 認証チェック用の関数、変数を子コンポーネントに渡す
  */
 
-type User = {
-  //   id: number;
+export type User = {
   firstName: string;
   lastName: string | null;
   email: string;
   isMfaActive: boolean;
-  //   createdAt: Date;
-  //   updatedAt: Date;
+  isFido2Active: boolean;
 };
 
 export type AuthContextType = {
   authUser: User | null;
-  setAuthUser: React.Dispatch<React.SetStateAction<null>>;
+  setAuthUser: React.Dispatch<React.SetStateAction<User | null>>;
   authChecking: boolean;
-  checkAuth: () => void;
+  checkAuth: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType>({
   authUser: null,
   setAuthUser: () => {},
   authChecking: true,
-  checkAuth: () => {},
+  checkAuth: async () => {},
 });
 
 export const AuthProvider: FC<{

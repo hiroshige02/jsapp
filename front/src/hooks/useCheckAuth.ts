@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { messages } from "@packages/shared";
+import { User } from "@/providers/AuthProvider";
 
 /**
  * 認証済のユーザー情報管理、画面遷移ごとの認証状態チェック
  */
 export const useCheckAuth = () => {
   const [authChecking, setAuthChecking] = useState<boolean>(true);
-  const [authUser, setAuthUser] = useState(null);
+  const [authUser, setAuthUser] = useState<User | null>(null);
 
   const location = useLocation();
 
@@ -20,8 +21,18 @@ export const useCheckAuth = () => {
         credentials: "include",
       });
 
-      if (res.status === 401) {
-        console.log(location.pathname);
+      if (res.status === 200) {
+        const resJson = await res.json();
+        const user = resJson.user;
+        setAuthUser({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          isMfaActive: user.isMfaActive,
+          isFido2Active: user.isFido2Active,
+        });
+      } else if (res.status !== 200) {
+        // console.log(location.pathname);
         setAuthUser(null);
       }
     } catch (error) {

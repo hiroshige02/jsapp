@@ -25,6 +25,7 @@ import {
   LoadingContextType,
   LoadingContext,
 } from "@/providers/LoadingProvider";
+import { messages } from "@packages/shared";
 
 interface Props {
   children: React.ReactNode;
@@ -51,23 +52,26 @@ const NavLink = (props: Props): React.ReactNode => {
 export const Navbar = (): React.ReactNode => {
   const navigate = useNavigate();
   const { postMethod } = useApi();
-  const { setAuthUser }: AuthContextType = useContext(AuthContext);
+  const { setAuthUser, authUser }: AuthContextType = useContext(AuthContext);
   const { setLoading }: LoadingContextType = useContext(LoadingContext);
 
   // ログアウト
   const logOut = async () => {
     // ローディング開始、エラーのクリア
     setLoading(true);
-    const res = await postMethod<undefined>(undefined, "logout");
-    const resJson = await res.json();
-    if (!res.ok) {
-      throw new Error(resJson.message);
+    try {
+      const res = await postMethod<undefined>(undefined, "auth/logout");
+      if (res.status !== 200) {
+        alert(messages.serverError);
+        return;
+      }
+      setAuthUser(null);
+      navigate("/login");
+    } catch (error) {
+      alert(messages.serverError);
+    } finally {
+      setLoading(false);
     }
-
-    setAuthUser(null);
-    navigate("/login");
-
-    setLoading(false);
   };
 
   const { open, onOpen, onClose } = useDisclosure();
@@ -96,7 +100,7 @@ export const Navbar = (): React.ReactNode => {
             <HStack as={"nav"} gap={4} display={{ base: "none", md: "flex" }}>
               {Links.map((link, idx) => (
                 <NavLink key={idx}>
-                  <RouterLink to={link.linkTo} onClick={() => link.onClick}>
+                  <RouterLink to={link.linkTo} onClick={link.onClick}>
                     {link.text}
                   </RouterLink>
                 </NavLink>
@@ -105,19 +109,7 @@ export const Navbar = (): React.ReactNode => {
           </HStack>
           <Flex alignItems={"center"}>
             <Menu.Root>
-              <Menu.Trigger asChild>
-                <Button
-                  rounded={"full"}
-                  variant={"ghost"}
-                  cursor={"pointer"}
-                  minW={0}
-                >
-                  <Avatar.Root>
-                    <Avatar.Image src="https://images.unsplash.com/photo-1493666438817-866a91353ca9?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9" />
-                  </Avatar.Root>
-                </Button>
-              </Menu.Trigger>
-
+              {authUser!.firstName}
               <Portal>
                 <Menu.Positioner>
                   <Menu.Content>

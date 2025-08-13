@@ -12,14 +12,14 @@ import {
   Link,
   IconButton,
 } from "@chakra-ui/react";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { loginFormSchema, LoginFormSchema } from "./schema";
 import { useValidForm } from "@/lib/useValidForm";
 import useApi from "@/lib/api";
 import { errorFormat } from "@/lib/errorFormat";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import FormError from "@/components/FormError";
 import { AuthContextType, AuthContext } from "@/providers/AuthProvider";
 import {
@@ -27,14 +27,19 @@ import {
   LoadingContext,
 } from "@/providers/LoadingProvider";
 import { messages } from "@packages/shared";
+import {
+  startAuthentication,
+  AuthenticationResponseJSON,
+} from "@simplewebauthn/browser";
 
 // パスワードログイン画面
 const Login: FC = () => {
   const { setAuthUser }: AuthContextType = useContext(AuthContext);
   const { setLoading }: LoadingContextType = useContext(LoadingContext);
   const navigate = useNavigate();
-  const { postMethod } = useApi();
-  const [showPassword, setShowPassword] = useState(false);
+  const { postMethod, getMethod } = useApi();
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showFido2, setShowFido2] = useState<boolean>(false);
 
   // バリデーション
   type ValuesKey = keyof LoginFormSchema;
@@ -57,10 +62,7 @@ const Login: FC = () => {
         // 成功時の処理
         const resJson = await res.json();
         console.log("LOGIN resJson: ", resJson);
-
         setAuthUser(resJson.user);
-        const nextRoot = resJson.totpRequire ? "/login_input_code" : "/home";
-
         resJson.totpRequire
           ? navigate("/login_input_code", { state: { fromLogin: true } })
           : navigate("/home");
@@ -93,6 +95,65 @@ const Login: FC = () => {
       setLoading(false);
     }
   };
+
+  // FIDO2ログイン
+  const fido2Login = async () => {
+    // ローディング開始、エラーのクリア
+    setLoading(true);
+    clearErrors();
+
+    try {
+      const resp = await postMethod<undefined>(
+        undefined,
+        "generate_fido2_auth_options"
+      );
+      const respJson = await resp.json();
+      if (!resp.ok) {
+        alert(respJson.message);
+        return;
+      }
+
+      const options = respJson.options;
+      const authResp = await startAuthentication({ optionsJSON: options });
+      const result = await postMethod<AuthenticationResponseJSON>(
+        authResp,
+        "fido2_login"
+      );
+
+      const resultJson = await result.json();
+      // console.log("After verify: ", resultJson);
+      if (!result.ok) {
+        alert(resultJson.message);
+        return;
+      }
+
+      setAuthUser(resultJson.user);
+      navigate("/home");
+    } catch (error) {
+      console.log(error);
+      alert(messages.serverError);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // FIDO2ログインが可能か
+  const tryFido2Login = async () => {
+    try {
+      const res = await getMethod("check_fido2_login");
+      const resJson = await res.json();
+      if (!resJson.fido2) return;
+
+      setShowFido2(true);
+      // fido2Login(); // TODO: FIDO2ログインのルート表示だけにするか、自動でFIDO2ログインさせるか
+    } catch (error) {
+      alert(messages.serverError);
+    }
+  };
+
+  useEffect(() => {
+    tryFido2Login();
+  }, []);
 
   return (
     <Flex align={"center"} justify={"center"} bg="gray.50">
@@ -167,13 +228,24 @@ const Login: FC = () => {
                 </Button>
               </Stack>
 
-              <Stack pt={6}>
+              <Stack gap={3}>
                 <Text>
                   Don't have an account?{" "}
-                  <Link color={"blue.400"} href="/register">
-                    Sign up
-                  </Link>
+                  <NavLink to="/register">
+                    <Text as="span" color={"blue.400"}>
+                      Sign up
+                    </Text>
+                  </NavLink>
                 </Text>
+
+                {showFido2 && (
+                  <Text>
+                    Login with FIDO2 ?{" "}
+                    <Link color={"blue.400"} onClick={() => fido2Login()}>
+                      Sign in
+                    </Link>
+                  </Text>
+                )}
               </Stack>
             </Stack>
           </Box>

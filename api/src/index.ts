@@ -8,6 +8,7 @@ import publicRoutes from "@/routes/publicRoutes";
 import "@/config/passportConfig";
 import { cookieConfig } from "@/config/passportConfig";
 import cookieParser from "cookie-parser";
+import { User as PrismaUser } from "@prisma/client";
 
 dotenv.config();
 
@@ -27,11 +28,13 @@ app.use(express.json());
 app.use(cors(corsOptions));
 app.use(json({ limit: "100mb" }));
 app.use(urlencoded({ limit: "100mb", extended: true }));
-app.use(cookieParser());
+app.use(cookieParser(process.env.COOKIE_SECRET));
 
 declare module "express-session" {
   interface SessionData {
     secret: string;
+    registOptions: PublicKeyCredentialCreationOptionsJSON;
+    authOptions: PublicKeyCredentialRequestOptionsJSON;
   }
 }
 app.use(

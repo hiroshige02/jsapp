@@ -34,7 +34,7 @@ passport.use(
 
 // 認証用のJWT tokenはCookieから取得
 const cookieExtractor = (req: any) => {
-  return req?.cookies?.token ? req.cookies.token : null;
+  return req.signedCookies?.token ? req.signedCookies.token : null;
 };
 const opts: StrategyOptions = {
   jwtFromRequest: cookieExtractor,
@@ -65,8 +65,17 @@ export const cookieConfig: CookieOptions = {
   httpOnly: true,
   secure: false,
   sameSite: "lax",
+  signed: true,
   // maxAge: 1000 * 60 * 60, // 1時間
-  expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+  expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24時間
+};
+
+export const fido2CookieConfig: CookieOptions = {
+  httpOnly: true,
+  secure: false,
+  sameSite: "lax",
+  signed: true,
+  expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30日
 };
 
 // JWT認証のためステートレス。認証済みユーザーのセッション管理不要
