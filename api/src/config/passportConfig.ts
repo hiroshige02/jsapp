@@ -3,7 +3,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { verify } from "argon2";
 import prisma from "@/lib/prisma";
 import { Strategy as JWTStrategy, StrategyOptions } from "passport-jwt";
-import { CookieOptions, Request as ExpressRequest } from "express";
+import { CookieOptions } from "express";
 
 // パスワードログイン用
 passport.use(
@@ -21,7 +21,16 @@ passport.use(
         } else {
           console.log("PASSPORT LOGIN SUCCESS");
 
-          return done(null, user);
+          const userInfo = {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            isMfaActive: user.isMfaActive,
+            isFido2Active: user.isFido2Active,
+            twoFactorSecret: user.twoFactorSecret,
+          };
+          return done(null, userInfo);
         } // 成功
       } catch (error) {
         console.log("LOGIN CATCE ERROR");

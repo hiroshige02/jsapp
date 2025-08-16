@@ -61,7 +61,6 @@ const Login: FC = () => {
       if (res.ok) {
         // 成功時の処理
         const resJson = await res.json();
-        console.log("LOGIN resJson: ", resJson);
         setAuthUser(resJson.user);
         resJson.totpRequire
           ? navigate("/login_input_code", { state: { fromLogin: true } })
@@ -102,6 +101,9 @@ const Login: FC = () => {
     setLoading(true);
     clearErrors();
 
+    const supportMessage =
+      "\nFIDO2認証がうまくいかない場合、パスワードとTOTPで認証してください";
+
     try {
       const resp = await postMethod<undefined>(
         undefined,
@@ -123,7 +125,7 @@ const Login: FC = () => {
       const resultJson = await result.json();
       // console.log("After verify: ", resultJson);
       if (!result.ok) {
-        alert(resultJson.message);
+        alert(resultJson.message + supportMessage);
         return;
       }
 
@@ -131,7 +133,7 @@ const Login: FC = () => {
       navigate("/home");
     } catch (error) {
       console.log(error);
-      alert(messages.serverError);
+      alert(messages.serverError + supportMessage);
     } finally {
       setLoading(false);
     }

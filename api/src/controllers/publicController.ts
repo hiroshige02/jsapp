@@ -26,7 +26,6 @@ export const register = async (req: Request, res: Response) => {
 
 // パスワードログイン
 export const login = async (req: Request, res: Response) => {
-  // console.log("authenticated User is ", req.user);
   const user = req.user as User;
 
   if (!user.isMfaActive) {
@@ -77,10 +76,6 @@ export const totpLogin = async (req: Request, res: Response) => {
       token,
       window: 1, // 1スロット(±30秒)のずれの許容
     });
-
-    console.log("token: ", token);
-    console.log("secret: ", secret);
-    console.log("verified: ", verified);
 
     if (verified) {
       const jwtToken = loginJwtSign({ sub: user.id });

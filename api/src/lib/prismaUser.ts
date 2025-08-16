@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 
 // ユーザー情報を取得
-export const findUser = async (id: number) =>
+export const findUser = async (id: number, withPassKeys: boolean = true) =>
   await prisma.user.findUnique({
     where: {
       id: Number(id),
@@ -17,3 +17,12 @@ export const findUser = async (id: number) =>
       passKeys: true,
     },
   });
+
+// API返却用Userカラム
+export const frontSelectUser = {
+  firstName: true,
+  lastName: true,
+  email: true,
+  isMfaActive: true,
+  isFido2Active: true,
+};

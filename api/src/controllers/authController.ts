@@ -5,6 +5,7 @@ import speakeasy from "speakeasy";
 import qrCode from "qrcode";
 import { messages } from "@packages/shared";
 import { cookieConfig } from "@/config/passportConfig";
+import { frontSelectUser } from "@/lib/prismaUser";
 
 // TOTPのQRコードを取得
 export const setup2FA = async (req: Request, res: Response) => {
@@ -53,21 +54,25 @@ export const verify2FA = async (req: Request, res: Response) => {
     // console.log("secret: ", secret);
     // console.log("verified: ", verified);
 
-    if (verified) {
-      await prisma.user.update({
-        where: {
-          id: user.id,
-        },
-        data: {
-          twoFactorSecret: secret,
-          isMfaActive: true,
-        },
-      });
-
-      res.status(200).json({ message: "TOTP設定が完了しました" });
-    } else {
+    if (!verified) {
       res.status(400).json({ message: messages.authFailed });
+      return;
     }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        twoFactorSecret: secret,
+        isMfaActive: true,
+      },
+      select: frontSelectUser,
+    });
+
+    res
+      .status(200)
+      .json({ message: "TOTP設定が完了しました", user: updatedUser });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: messages.serverError });
@@ -99,13 +104,14 @@ export const reset2FA = async (req: Request, res: Response) => {
         twoFactorSecret: "",
         isMfaActive: false,
       },
+      select: frontSelectUser,
     });
     res
       .status(200)
       .json({ message: "TOTP設定を解除しました", user: updatedUser });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "TOTP設定の解除に失敗しました" });
+    res.status(500).json({ message: messages.serverError });
   }
 };
 

@@ -26,7 +26,6 @@ model User {
   passKeys Passkey[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
 }
 
 model Passkey {
@@ -41,5 +40,4 @@ model Passkey {
   transports String? @db.VarChar(255)
   createdAt DateTime @default(now()) @map("created_at")
   lastUsed DateTime? @updatedAt @map("last_used")
-  deletedAt DateTime? @map("deleted_at")
 }

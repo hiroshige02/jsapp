@@ -32,7 +32,6 @@ export const useCheckAuth = () => {
           isFido2Active: user.isFido2Active,
         });
       } else if (res.status !== 200) {
-        // console.log(location.pathname);
         setAuthUser(null);
       }
     } catch (error) {
@@ -45,7 +44,7 @@ export const useCheckAuth = () => {
 
   useEffect(() => {
     checkAuth();
-  }, [location.pathname]);
+  }, []);
 
   return { authUser, setAuthUser, authChecking, checkAuth };
 };

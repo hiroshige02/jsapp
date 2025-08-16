@@ -10,12 +10,9 @@ import {
 } from "@simplewebauthn/server";
 import { Request, Response } from "express";
 import { messages } from "@packages/shared";
-// import jwt from "jsonwebtoken";
 import { jwtVerify, loginJwtSign } from "@/lib/jwt";
 import prisma from "@/lib/prisma";
-import { findUser } from "@/lib/prismaUser";
-// import {getUser} from "@/lib/prismaUser";
-
+import { findUser, frontSelectUser } from "@/lib/prismaUser";
 import { fido2CookieConfig } from "@/config/passportConfig";
 import { cookieConfig } from "@/config/passportConfig";
 import { User } from "@prisma/client";
@@ -25,7 +22,6 @@ import { User } from "@prisma/client";
 // RP情報
 const rpName: string = process.env.APP_NAME!;
 const rpID: string = process.env.DOMAIN!;
-// const origin: string = process.env.FRONT_BASE_URL!.split("//")[1];
 
 type Passkey = {
   webAuthnUserID: Base64URLString;
@@ -134,6 +130,7 @@ export const verifyFido2 = async (req: Request, res: Response) => {
           id: user.id,
         },
         data: { isFido2Active: true },
+        select: frontSelectUser,
       });
     });
     return res
@@ -141,7 +138,7 @@ export const verifyFido2 = async (req: Request, res: Response) => {
       .json({ message: "FIDO2設定が完了しました", user: updatedUser });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ message: messages.fide2RegisterFailed });
+    return res.status(500).json({ message: messages.serverError });
   }
 };
 
@@ -225,6 +222,7 @@ export const fido2Login = async (req: Request, res: Response) => {
       lastName: userAndPasskeys.lastName,
       email: userAndPasskeys.email,
       isMfaActive: userAndPasskeys.isMfaActive,
+      isFido2Active: userAndPasskeys.isFido2Active,
     },
   });
 };
@@ -247,6 +245,7 @@ export const resetFido2 = async (req: Request, res: Response) => {
           id: userId,
         },
         data: { isFido2Active: false },
+        select: frontSelectUser,
       });
     });
   } catch (error) {

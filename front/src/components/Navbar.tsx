@@ -1,18 +1,12 @@
-// Simple with user dropdown
-
-// "use client";
-
 import {
   Box,
   Flex,
-  Avatar,
   HStack,
   IconButton,
-  Portal,
-  Button,
   Menu,
   useDisclosure,
   Stack,
+  Text,
 } from "@chakra-ui/react";
 import { IoMdClose } from "react-icons/io";
 import { GiHamburgerMenu } from "react-icons/gi";
@@ -108,18 +102,7 @@ export const Navbar = (): React.ReactNode => {
             </HStack>
           </HStack>
           <Flex alignItems={"center"}>
-            <Menu.Root>
-              {authUser!.firstName}
-              <Portal>
-                <Menu.Positioner>
-                  <Menu.Content>
-                    <Menu.Item value="">Link 1</Menu.Item>
-                    <Menu.Item value="">Link 2</Menu.Item>
-                    <Menu.Item value="">Link 3</Menu.Item>
-                  </Menu.Content>
-                </Menu.Positioner>
-              </Portal>
-            </Menu.Root>
+            <Menu.Root>{authUser!.firstName}</Menu.Root>
           </Flex>
         </Flex>
 
@@ -128,8 +111,14 @@ export const Navbar = (): React.ReactNode => {
             <Stack as={"nav"} gap={4}>
               {Links.map((link, idx) => (
                 <NavLink key={idx}>
-                  <RouterLink to={link.linkTo} onClick={link.onClick}>
-                    {link.text}
+                  <RouterLink
+                    to={link.linkTo}
+                    onClick={async () => {
+                      link.onClick?.();
+                      onClose();
+                    }}
+                  >
+                    <Text>{link.text}</Text>
                   </RouterLink>
                 </NavLink>
               ))}

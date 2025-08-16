@@ -1,13 +1,13 @@
 import {
   FC,
   RefObject,
-  //   useEffect,
   useState,
   useRef,
   createRef,
-  //   SyntheticEvent,
   useContext,
   ChangeEvent,
+  useEffect,
+  KeyboardEvent,
 } from "react";
 
 import {
@@ -19,7 +19,6 @@ import {
   Button,
   Heading,
   HStack,
-  Link,
   Text,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
@@ -45,31 +44,66 @@ const InputCode: FC = () => {
   const { setLoading }: LoadingContextType = useContext(LoadingContext);
   const initialCode: CodeSchema = Array(6).fill("");
   const [codes, setCodes] = useState<CodeSchema>(initialCode);
+  const [toLogin, setToLogin] = useState<boolean>(false);
   const [error, setError] = useState<allError>([]);
   const { postMethod } = useApi();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // MFAログイン時の遷移か、TOTP設定時の遷移か
-  const toLogin = location.pathname === "/login_input_code";
-  console.log("location.state?.fromLogin: ", location.state?.fromLogin);
+  useEffect(() => {
+    // MFAログイン時の遷移か、TOTP設定時の遷移か
+    setToLogin(location.pathname === "/login_input_code");
+    // ログイン時はURL直打ちでの遷移は許可しない。パスワード認証後の遷移のみ
+    if (toLogin && !location.state?.fromLogin) {
+      navigate("/login");
+    }
+  }, []);
 
-  // ログイン時はURL直打ちでの遷移は許可しない。パスワード認証後の遷移のみ
-  if (toLogin && !location.state?.fromLogin) {
-    return <Navigate to="/login" replace />;
-  }
-
+  // コード入力用部品用
   const inputRefs = useRef<RefObject<HTMLInputElement | null>[]>(
     Array.from({ length: 6 }, () => createRef<HTMLInputElement>())
   );
 
-  const onKeyUp = (key: number, keyType: string) =>
-    inputRefs.current[
-      keyType === "Backspace" ? key - 1 : key + 1
-    ]?.current?.focus();
+  // const isNumeric = (newVal: string) => newVal.match(/^[0-9]{1}$/);
+  const isNumeric = (newVal: string) => /^[0-9]$/.test(newVal);
+
+  // 入力にともなうカーソル位置等の調整
+  const onKeyUp = (key: number, e: KeyboardEvent) => {
+    const keyType = e.key;
+
+    if (keyType === "Backspace") {
+      inputRefs.current[key - 1]?.current?.focus();
+      setCodes((prev) => {
+        const updated = [...prev];
+        updated[key] = "";
+        return updated;
+      });
+      return;
+    } else if (keyType === "ArrowLeft") {
+      inputRefs.current[key - 1]?.current?.focus();
+      return;
+    } else if (keyType === "ArrowRight") {
+      inputRefs.current[key + 1]?.current?.focus();
+      return;
+    }
+
+    // その他 数字以外の入力
+    if (isNumeric(keyType) === false) return;
+
+    // 数字の入力
+    inputRefs.current[key + 1]?.current?.focus();
+    setCodes((prev) => {
+      const updated = [...prev];
+      updated[key] = keyType;
+      return updated;
+    });
+  };
 
   const onChange = (key: number, e: ChangeEvent<HTMLInputElement>) => {
     const newVal = e.target.value;
+    console.log("newVal: ", newVal, isNumeric(newVal) === false);
+    if (isNumeric(newVal) === false) return;
+
     setCodes((prev) => {
       const updated = [...prev];
       updated[key] = newVal;
@@ -119,16 +153,11 @@ const InputCode: FC = () => {
 
       // 入力コード送信
       const res = await postMethod<CodeSchema>(codes, apiUrl);
-      console.log("Input Code: ", res);
-
       const resJson = await res.json();
-      console.log(resJson);
 
       if (res.ok) {
-        if (toLogin) {
-          // TOTPログイン時
-          setAuthUser(resJson.user);
-        } else {
+        setAuthUser(resJson.user);
+        if (!toLogin) {
           // TOTP設定時
           alert(resJson.message);
         }
@@ -183,14 +212,14 @@ const InputCode: FC = () => {
                   }
                 >
                   <Input
-                    pattern="[0-9]"
                     maxLength={1}
                     ref={inputRefs.current[key]}
                     width={"40px"}
                     key={Number(key)}
                     value={value ?? ""}
                     onChange={(e) => onChange(key, e)}
-                    onKeyUp={(e) => onKeyUp(key, e.key)}
+                    onKeyUp={(e) => onKeyUp(key, e)}
+                    autoComplete="off"
                   />
                 </Field.Root>
               ))}

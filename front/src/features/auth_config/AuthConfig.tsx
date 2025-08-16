@@ -1,5 +1,5 @@
 import { FC, useContext } from "react";
-import { Flex, Box, Stack, Button, Heading, Text } from "@chakra-ui/react";
+import { Flex, Box, Stack, Button, Heading, Field } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import useApi from "@/lib/api";
 import {
@@ -12,6 +12,7 @@ import {
   RegistrationResponseJSON,
 } from "@simplewebauthn/browser";
 import { AuthContext, AuthContextType } from "@/providers/AuthProvider";
+import FormError from "@/components/FormError";
 
 const AuthConfig: FC = () => {
   const { setLoading }: LoadingContextType = useContext(LoadingContext);
@@ -70,11 +71,10 @@ const AuthConfig: FC = () => {
       alert(resultJson.message);
 
       if (!result.ok) return;
-
       setAuthUser(resultJson.user);
     } catch (error) {
       console.log(error);
-      alert(messages.serverError);
+      alert(messages.fide2RegisterFailed);
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,14 @@ const AuthConfig: FC = () => {
             Auth Config
           </Heading>
         </Stack>
-        <Box rounded={"lg"} bg="white" boxShadow={"lg"} p={8}>
+
+        <Box
+          rounded={"lg"}
+          bg="white"
+          boxShadow={"lg"}
+          p={8}
+          minWidth={"250px"}
+        >
           <Stack>
             <Stack pt={2}>
               <Button
@@ -122,57 +129,69 @@ const AuthConfig: FC = () => {
                 _hover={{
                   bg: "blue.500",
                 }}
+                disabled={authUser?.isMfaActive}
                 onClick={() => void navigate("/totp_setup")}
               >
                 TOTP Setup
               </Button>
-              <Stack gap={10} pt={2}>
-                <Button
-                  loadingText="Submitting"
-                  size="lg"
-                  bg={"blue.400"}
-                  color={"white"}
-                  _hover={{
-                    bg: "blue.500",
-                  }}
-                  disabled={authUser?.isFido2Active || !authUser?.isMfaActive}
-                  onClick={() => TOTPReset()}
-                >
-                  TOTP Reset
-                </Button>
-              </Stack>
+            </Stack>
+            <Stack gap={10} pt={2}>
+              <Button
+                loadingText="Submitting"
+                size="lg"
+                bg={"blue.400"}
+                color={"white"}
+                _hover={{
+                  bg: "blue.500",
+                }}
+                disabled={authUser?.isFido2Active || !authUser?.isMfaActive}
+                onClick={() => TOTPReset()}
+              >
+                TOTP Reset
+              </Button>
+            </Stack>
+            {authUser?.isFido2Active && (
+              <Field.Root id="firstName" required invalid={true}>
+                <Field.ErrorText>
+                  <FormError messages="FIDO2の設定中はTOTPの設定を解除できません" />
+                </Field.ErrorText>
+              </Field.Root>
+            )}
+          </Stack>
+        </Box>
 
-              <Stack gap={10} pt={2}>
-                <Button
-                  loadingText="Submitting"
-                  size="lg"
-                  bg={"blue.400"}
-                  color={"white"}
-                  _hover={{
-                    bg: "blue.500",
-                  }}
-                  disabled={!authUser?.isMfaActive}
-                  onClick={() => setupFIDO2()}
-                >
-                  FIDO2 Setup
-                </Button>
-              </Stack>
+        <Box rounded={"lg"} bg="white" boxShadow={"lg"} p={8}>
+          <Stack>
+            <Stack gap={10} pt={2}>
+              <Button
+                loadingText="Submitting"
+                size="lg"
+                bg={"blue.400"}
+                color={"white"}
+                _hover={{
+                  bg: "blue.500",
+                }}
+                disabled={!authUser?.isMfaActive || authUser.isFido2Active}
+                onClick={() => setupFIDO2()}
+              >
+                FIDO2 Setup
+              </Button>
+            </Stack>
 
-              <Stack gap={10} pt={2}>
-                <Button
-                  loadingText="Submitting"
-                  size="lg"
-                  bg={"blue.400"}
-                  color={"white"}
-                  _hover={{
-                    bg: "blue.500",
-                  }}
-                  disabled={!authUser?.isFido2Active}
-                  onClick={() => FIDO2Reset()}
-                >
-                  FIDO2 Reset
-                </Button>
-              </Stack>
+            <Stack gap={10} pt={2}>
+              <Button
+                loadingText="Submitting"
+                size="lg"
+                bg={"blue.400"}
+                color={"white"}
+                _hover={{
+                  bg: "blue.500",
+                }}
+                disabled={!authUser?.isFido2Active}
+                onClick={() => FIDO2Reset()}
+              >
+                FIDO2 Reset
+              </Button>
             </Stack>
           </Stack>
         </Box>
