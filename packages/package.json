@@ -1,8 +1,8 @@
 {
   "name": "@packages/shared",
   "version": "1.0.0",
+  "type": "commonjs",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,6 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "type": "module",
   "dependencies": {
     "eslint-config-prettier": "^10.1.5",
     "yup": "^1.6.1"

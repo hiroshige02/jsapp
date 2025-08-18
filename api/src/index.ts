@@ -8,7 +8,6 @@ import publicRoutes from "@/routes/publicRoutes";
 import "@/config/passportConfig";
 import { cookieConfig } from "@/config/passportConfig";
 import cookieParser from "cookie-parser";
-import { User as PrismaUser } from "@prisma/client";
 
 dotenv.config();
 

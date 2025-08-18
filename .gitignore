@@ -1,4 +1,4 @@
-**/.env*
+**/.env
 **/node_modules
 **/dist
 generated
@@ -8,3 +8,4 @@ generated
 front/.prettierrc.json
 api/.prettierrc.json
 packages/.prettierrc.json
+**/*.tsbuildinfo

@@ -1,5 +1,4 @@
 networks:
-  # web_net:
   backend_net:
     driver: bridge
     ipam:
@@ -13,27 +12,26 @@ services:
   front:
     container_name: front
     build:
-      dockerfile: ./docker/front/Dockerfile.dev
-      # dockerfile: ./docker/front/Dockerfile.prod
+      # dockerfile: ./docker/front/Dockerfile.dev
+      dockerfile: ./docker/front/Dockerfile.prod
     env_file: ./docker/front/.env
-    volumes: 
-      - ./front:/app
+    # volumes: 
+    #   - ./front:/app
 
     ports:
       - "5173:5173"
-      # - "80:80"
     networks:
       - backend_net
 
   api:
     container_name: api
     build:
-      dockerfile: ./docker/api/Dockerfile.dev
-      # dockerfile: ./docker/api/Dockerfile.prod
+      # dockerfile: ./docker/api/Dockerfile.dev
+      dockerfile: ./docker/api/Dockerfile.prod
     env_file: ./docker/api/.env
 
-    volumes:
-      - ./api:/app
+    # volumes:
+    #   - ./api:/app # productionでは不要
     ports:
       - "3000:3000"
       - "3333:3333"
@@ -49,8 +47,8 @@ services:
       dockerfile: ./docker/db/Dockerfile
     env_file: ./docker/db/.env
     volumes:
-      - db_store:/var/lib/postgresql/data
-      # - ./docker/db/postgresql.conf:/etc/postgresql/postgresql.conf
+      # - db_store:/var/lib/postgresql/data
+      - ./docker/db/postgresql.conf:/etc/postgresql/postgresql.conf
     ports:
       - "5432:5432"
     tty: true

@@ -101,7 +101,6 @@ const InputCode: FC = () => {
 
   const onChange = (key: number, e: ChangeEvent<HTMLInputElement>) => {
     const newVal = e.target.value;
-    console.log("newVal: ", newVal, isNumeric(newVal) === false);
     if (isNumeric(newVal) === false) return;
 
     setCodes((prev) => {

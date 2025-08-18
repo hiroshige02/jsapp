@@ -1,4 +1,4 @@
-FROM node:24-bullseye-slim
+FROM node:24-bookworm-slim
 
 # 環境変数設定
 ENV NODE_ENV="development"
@@ -9,6 +9,11 @@ WORKDIR /app
 # アプリケーションの依存関係をインストールする
 COPY ./api .
 COPY ./packages ../packages
+
+# RUNはimageのビルド時に実行
+RUN apt update && \
+    apt install -y build-essential python3 # argon2導入のため
+
 RUN npm install
 
 CMD ["sh", "-c", "npm run dev"]

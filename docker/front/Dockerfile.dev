@@ -9,8 +9,6 @@ WORKDIR /app
 COPY ./front .
 COPY ./packages ../packages
 
-RUN apt update && \
-    apt install -y build-essential python3 # argon2導入のため
 # RUNはimageのビルド時に実行
 RUN npm install 
 
