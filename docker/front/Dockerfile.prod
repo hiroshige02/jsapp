@@ -9,6 +9,7 @@ WORKDIR /app
 COPY front .
 COPY ./packages ../packages
 
+RUN cp .env.example .env
 RUN npm install 
 RUN npm run build
 
@@ -18,6 +19,7 @@ WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
 
 COPY --from=builder /app/dist .
+COPY --from=builder /app/.env.example .env
 
 RUN rm -rf /etc/nginx/conf.d/
 COPY docker/front/nginx.conf /etc/nginx/conf.d/

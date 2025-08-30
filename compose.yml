@@ -14,7 +14,7 @@ services:
     build:
       # dockerfile: ./docker/front/Dockerfile.dev
       dockerfile: ./docker/front/Dockerfile.prod
-    env_file: ./docker/front/.env
+    env_file: ./docker/front/.env.example
     # volumes: 
     #   - ./front:/app
 
@@ -28,7 +28,7 @@ services:
     build:
       # dockerfile: ./docker/api/Dockerfile.dev
       dockerfile: ./docker/api/Dockerfile.prod
-    env_file: ./docker/api/.env
+    env_file: ./docker/api/.env.example
 
     # volumes:
     #   - ./api:/app # productionでは不要
@@ -45,7 +45,7 @@ services:
     container_name: db
     build:
       dockerfile: ./docker/db/Dockerfile
-    env_file: ./docker/db/.env
+    env_file: ./docker/db/.env.example
     volumes:
       # - db_store:/var/lib/postgresql/data
       - ./docker/db/postgresql.conf:/etc/postgresql/postgresql.conf
