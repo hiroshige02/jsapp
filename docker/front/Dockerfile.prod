@@ -24,7 +24,7 @@ COPY --from=builder /app/.env.example .env
 RUN rm -rf /etc/nginx/conf.d/
 COPY docker/front/nginx.conf /etc/nginx/conf.d/
 
-EXPOSE 5173
+EXPOSE 80
 
 # CMDはコンテナの起動時に実行されるデフォルトコマンド
 CMD ["nginx", "-g", "daemon off;"]

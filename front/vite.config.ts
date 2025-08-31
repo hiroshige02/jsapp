@@ -12,7 +12,7 @@ export default defineConfig({
   ],
   server: {
     host: "0.0.0.0", // WSL環境でもWindows側のブラウザから接続可能に
-    port: 5173, // デフォルトポート（変更可能）
+    port: 80, // デフォルトポート（変更可能）
     strictPort: true, // ポートが使用中ならエラー
     watch: {
       usePolling: true, // WSLでのファイル変更検出を安定化
@@ -20,7 +20,7 @@ export default defineConfig({
     hmr: {
       protocol: "ws",
       host: "localhost",
-      clientPort: 5173,
+      clientPort: 80,
     },
   },
 });
