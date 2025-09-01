@@ -17,6 +17,8 @@ RUN npm run build
 FROM nginx:1.28
 WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
+RUN apt update && \
+  apt install -y vim
 
 COPY --from=builder /app/dist .
 COPY --from=builder /app/.env.example .env

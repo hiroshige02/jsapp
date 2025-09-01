@@ -10,7 +10,10 @@ COPY ./front .
 COPY ./packages ../packages
 
 # RUNはimageのビルド時に実行
-RUN npm install 
+RUN npm install
+
+RUN apt update && \
+  apt install -y vim
 
 # CMDはコンテナの起動時に実行されるデフォルトコマンド
 CMD [ "npm", "run", "dev"]

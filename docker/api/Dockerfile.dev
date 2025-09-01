@@ -12,7 +12,9 @@ COPY ./packages ../packages
 
 # RUNはimageのビルド時に実行
 RUN apt update && \
-    apt install -y build-essential python3 # argon2導入のため
+		apt install -y build-essential python3 # argon2導入のため
+RUN apt install -y vim
+RUN npm install -g prisma
 
 RUN npm install
 

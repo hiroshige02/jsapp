@@ -5,6 +5,8 @@ networks:
       driver: default
       config:
         - subnet: 192.168.100.0/24
+  front_api_net:
+    driver: bridge
 volumes:
   db_store:
 
@@ -21,7 +23,7 @@ services:
     ports:
       - "80:80"
     networks:
-      - backend_net
+      front_api_net:
 
   api:
     container_name: api
@@ -41,6 +43,8 @@ services:
     networks:
       backend_net:
         ipv4_address: 192.168.100.10
+      front_api_net:
+
   db:
     container_name: db
     build:

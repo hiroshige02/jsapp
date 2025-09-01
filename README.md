@@ -26,13 +26,13 @@ $ cd jsapp
 $ docker compose build
 $ docker compose up -d
 $ docker compose exec api bash
-$ npx prisma migrate dev
-$ npx prisma generate
-$ npx prisma db seed
+$ prisma migrate dev
+$ prisma generate
+$ prisma db seed
 ```
 
 ## 使用方法
-http://localhost:5173/login で、<br>
+http://localhost/login で、<br>
 ①下記テスト用アカウントでパスワードログイン<br>
 <img src="README_images/login.png" width="250px"><br><br>
 

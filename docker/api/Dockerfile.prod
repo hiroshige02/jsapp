@@ -10,7 +10,9 @@ COPY ./api .
 COPY ./packages ../packages
 
 RUN apt update && \
-    apt install -y build-essential python3 # argon2導入のため
+  apt install -y build-essential python3 # argon2導入のため
+RUN apt install -y vim
+RUN npm install -g prisma
 
 RUN cp .env.example .env
 RUN npm install
