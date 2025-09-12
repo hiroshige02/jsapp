@@ -16,10 +16,10 @@ services:
     build:
       # dockerfile: ./docker/front/Dockerfile.dev
       dockerfile: ./docker/front/Dockerfile.prod
-    env_file: ./docker/front/.env.example
-    # volumes: 
-    #   - ./front:/app
-
+    # env_file: ./docker/front/.env.example # 配布用
+    env_file: ./docker/front/.env.prod # ECSデプロイ用
+    args: 
+      API_URL: ${API_URL}
     ports:
       - "80:80"
     networks:

@@ -1,3 +1,4 @@
+########### ECSデプロイ用 ############
 # build stage
 FROM node:24-bullseye-slim AS builder
 
@@ -26,6 +27,7 @@ COPY --from=builder /app/.env.example .env
 RUN rm -rf /etc/nginx/conf.d/
 COPY docker/front/nginx.conf /etc/nginx/conf.d/
 
+RUN sed -i "s|__API_URL__|${API_URL}|g" /etc/nginx/conf.d/nginx.conf
 EXPOSE 80
 
 # CMDはコンテナの起動時に実行されるデフォルトコマンド
