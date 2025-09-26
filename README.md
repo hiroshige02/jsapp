@@ -12,15 +12,25 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)
 ![Express](https://img.shields.io/badge/Express-5-blue?logo=express)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-blue?logo=postgresql)
+![Redis](https://img.shields.io/badge/Redis-8.2-blue?logo=redis)
 
 ## infra
 ![Docker](https://img.shields.io/badge/Docker-28-blue?logo=docker)
 ![Node.js](https://img.shields.io/badge/Node.js-24-blue?logo=node.js)
 
 ## デモ
-AWSで公開予定(準備中)
+[https://jsapp.xyz/login](https://jsapp.xyz/login)  
+（ECS環境でデプロイ 構成図は[こちら](https://1drv.ms/i/c/9fff7a8edc873969/EW0JCah3MWtGsd2Flo8TayAB6wUm3zIBpYZfZ69Ir-T2Mw)）
 
-## 環境構築
+frontはS3に移行予定（2025/9/26 対応中） 
+
+ 
+**※本環境は検証目的のため、コストの都合により**
+**予告なくリソースを削除、またはデータベースをリセットする場合があります。**  
+**あらかじめご了承ください。**
+
+## 環境構築（ローカルで試す場合）
+
 ```
 $ cd jsapp
 $ docker compose build
