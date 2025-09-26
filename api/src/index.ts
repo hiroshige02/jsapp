@@ -8,6 +8,8 @@ import publicRoutes from "@/routes/publicRoutes";
 import "@/config/passportConfig";
 import { cookieConfig } from "@/config/passportConfig";
 import cookieParser from "cookie-parser";
+import { RedisStore } from "connect-redis";
+import { createClient } from "redis";
 
 dotenv.config();
 
@@ -16,10 +18,7 @@ const app = express();
 const corsOptions = {
   origin: process.env.FRONT_BASE_URL, //アクセス許可するオリジン
   credentials: true, //レスポンスヘッダーにAccess-Control-Allow-Credentials追加
-  // optionsSuccessStatus: 200, //レスポンスstatusを200
-  // に設定
   // maxAge: 86402, // キャッシュ時間（秒）
-  // methods: ['GET', 'POST', 'PUT', 'DELETE'],    // 許可するHTTPメソッド
 };
 
 // ******** Middlewares ********
@@ -29,6 +28,9 @@ app.use(json({ limit: "100mb" }));
 app.use(urlencoded({ limit: "100mb", extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
+// ECSデプロイ環境では、X-Forwarded-Protoでブラウザが送信する Origin ヘッダと
+// apiアプリ側で受け取るOriginを合わせる必要がある
+app.set("trust proxy", true);
 declare module "express-session" {
   interface SessionData {
     secret: string;
@@ -36,9 +38,15 @@ declare module "express-session" {
     authOptions: PublicKeyCredentialRequestOptionsJSON;
   }
 }
+
+// redisの設定
+const redisClient = createClient({ url: process.env.REDIS_URL });
+await redisClient.connect();
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "secret",
+    store: new RedisStore({ client: redisClient }),
     resave: false,
     saveUninitialized: false,
     cookie: cookieConfig,

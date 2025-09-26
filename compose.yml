@@ -7,6 +7,9 @@ networks:
         - subnet: 192.168.100.0/24
   front_api_net:
     driver: bridge
+  api_redis_net:
+    driver: bridge
+
 volumes:
   db_store:
 
@@ -17,8 +20,6 @@ services:
       # dockerfile: ./docker/front/Dockerfile.dev
       dockerfile: ./docker/front/Dockerfile.prod
     env_file: ./docker/front/.env.example
-    # volumes: 
-    #   - ./front:/app
 
     ports:
       - "80:80"
@@ -32,18 +33,20 @@ services:
       dockerfile: ./docker/api/Dockerfile.prod
     env_file: ./docker/api/.env.example
 
-    # volumes:
-    #   - ./api:/app # productionでは不要
+    volumes:
+      - ./api:/app
     ports:
       - "3000:3000"
       - "3333:3333"
       - "5555:5555"
     depends_on:
       - db
+      - redis
     networks:
       backend_net:
         ipv4_address: 192.168.100.10
       front_api_net:
+      api_redis_net:
 
   db:
     container_name: db
@@ -59,3 +62,11 @@ services:
     networks:
       backend_net:
         ipv4_address: 192.168.100.100
+
+  redis:
+    container_name: redis
+    image: "redis:8.2"
+    ports:
+      - "6379:6379"
+    networks:
+      api_redis_net:

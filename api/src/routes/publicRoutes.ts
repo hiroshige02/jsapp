@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Response } from "express";
 import passport from "passport";
 import { validate } from "@/lib/yup/validate";
 import {
@@ -42,5 +42,8 @@ router.get("/check", passport.authenticate("jwt", { session: false }), check);
 
 // ログイン画面でのFIDO2認証トリガー用
 router.get("/check_fido2_login", checkFido2Login);
+
+// ALBヘルスチェック用
+router.get("/health", (_, res: Response) => res.sendStatus(200));
 
 export default router;

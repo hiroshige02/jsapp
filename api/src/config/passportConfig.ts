@@ -72,7 +72,7 @@ passport.use(
 
 export const cookieConfig: CookieOptions = {
   httpOnly: true,
-  secure: false,
+  secure: process.env.NODE_ENV === "production-ecs",
   sameSite: "lax",
   signed: true,
   // maxAge: 1000 * 60 * 60, // 1時間
@@ -81,7 +81,7 @@ export const cookieConfig: CookieOptions = {
 
 export const fido2CookieConfig: CookieOptions = {
   httpOnly: true,
-  secure: false,
+  secure: process.env.NODE_ENV === "production-ecs",
   sameSite: "lax",
   signed: true,
   expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30日

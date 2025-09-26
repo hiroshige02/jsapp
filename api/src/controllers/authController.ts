@@ -40,9 +40,6 @@ export const verify2FA = async (req: Request, res: Response) => {
       return res.status(400).json({ message: messages.authFailed });
     }
 
-    console.log("verifySecret: ", secret);
-    console.log("token: ", token);
-
     const verified = speakeasy.totp.verify({
       secret: secret,
       encoding: "base32",

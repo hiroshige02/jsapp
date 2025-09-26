@@ -11,7 +11,7 @@ COPY ./packages ../packages
 
 RUN apt update && \
   apt install -y build-essential python3 # argon2導入のため
-RUN apt install -y vim
+RUN apt install -y vim redis-server # メンテナンス用
 RUN npm install -g prisma
 
 RUN cp .env.example .env
