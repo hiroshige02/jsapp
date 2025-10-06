@@ -19,10 +19,11 @@
 ![Node.js](https://img.shields.io/badge/Node.js-24-blue?logo=node.js)
 
 ## デモ
-[https://jsapp.xyz/login](https://jsapp.xyz/login)  
-（ECS環境でデプロイ 構成図は[こちら](https://1drv.ms/i/c/9fff7a8edc873969/EW0JCah3MWtGsd2Flo8TayAB6wUm3zIBpYZfZ69Ir-T2Mw)）
+[jsapp.xyz](https://www.jsapp.xyz)  
+ECS環境でデプロイ 構成図は[こちら](https://1drv.ms/i/c/9fff7a8edc873969/EW0JCah3MWtGsd2Flo8TayAB6wUm3zIBpYZfZ69Ir-T2Mw)  
+frontはS3に移行済（2025/10/6 構成図変更中）
 
-frontはS3に移行予定（2025/9/26 対応中） 
+ 
 
  
 **※本環境は検証目的のため、コストの都合により**
