@@ -20,9 +20,7 @@
 
 ## デモ
 [jsapp.xyz](https://www.jsapp.xyz)  
-ECS環境でデプロイ 構成図は[こちら](https://1drv.ms/i/c/9fff7a8edc873969/EW0JCah3MWtGsd2Flo8TayAB6wUm3zIBpYZfZ69Ir-T2Mw)  
-frontはS3に移行済（2025/10/6 構成図変更中）
-
+ECS+S3環境でデプロイ 構成図は[こちら](https://1drv.ms/b/c/9fff7a8edc873969/ERKbtPT0H49GvbYUFGWhQ4YBDDxpOEe_j6OzAu_lzQ6VMA?e=tXrjzb)  
  
 
  

@@ -59,6 +59,10 @@ app.use(passport.session());
 // App Routes
 app.use("/api/auth", authRoutes);
 app.use("/api", publicRoutes);
+// 404 Handler
+app.all("*", (_, res) => {
+  res.status(404).send("404 存在しないページです");
+});
 
 // Listen App
 const port = process.env.PORT;
