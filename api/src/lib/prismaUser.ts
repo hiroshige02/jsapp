@@ -1,7 +1,13 @@
 import prisma from "@/lib/prisma";
 
+// ユーザー情報をメールアドレスから取得
+export const findUserByEmail = async (email: string) =>
+  await prisma.user.findUnique({
+    where: { email },
+  });
+
 // ユーザー情報を取得
-export const findUser = async (id: number, withPassKeys: boolean = true) =>
+export const findUser = async (id: number) =>
   await prisma.user.findUnique({
     where: {
       id: Number(id),

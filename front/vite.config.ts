@@ -11,7 +11,7 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   server: {
-    host: "0.0.0.0", // WSL環境でもWindows側のブラウザから接続可能に
+    host: "0.0.0.0", // VITE HTTPサーバーの待ち受けアドレス
     port: 80, // デフォルトポート（変更可能）
     strictPort: true, // ポートが使用中ならエラー
     watch: {
@@ -19,7 +19,7 @@ export default defineConfig({
     },
     hmr: {
       protocol: "ws",
-      host: "localhost",
+      host: process.env.VITE_HMR_HOST || "localhost", // ブラウザからの接続先
       clientPort: 80,
     },
   },

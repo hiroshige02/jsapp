@@ -31,13 +31,6 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 // ECSデプロイ環境では、X-Forwarded-Protoでブラウザが送信する Origin ヘッダと
 // apiアプリ側で受け取るOriginを合わせる必要がある
 app.set("trust proxy", true);
-declare module "express-session" {
-  interface SessionData {
-    secret: string;
-    registOptions: PublicKeyCredentialCreationOptionsJSON;
-    authOptions: PublicKeyCredentialRequestOptionsJSON;
-  }
-}
 
 // redisの設定
 const redisClient = createClient({ url: process.env.REDIS_URL });
@@ -60,8 +53,8 @@ app.use(passport.session());
 app.use("/api/auth", authRoutes);
 app.use("/api", publicRoutes);
 // 404 Handler
-app.all("*", (_, res) => {
-  res.status(404).send("404 存在しないページです");
+app.use((req, res, _) => {
+  res.status(404).json({ path: req.path, message: "404 NOT FOUND" });
 });
 
 // Listen App

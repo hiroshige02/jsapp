@@ -13,8 +13,8 @@ COPY ./packages ../packages
 RUN npm install
 
 RUN apt update && \
-  apt install -y vim
-
-# CMDはコンテナの起動時に実行されるデフォルトコマンド
+  apt install -y vim curl \
+  libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+  # CMDはコンテナの起動時に実行されるデフォルトコマンド
 CMD [ "npm", "run", "dev"]
 # CMD [ "tail", "-f", "/dev/null" ]

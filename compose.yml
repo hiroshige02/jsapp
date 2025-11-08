@@ -5,6 +5,8 @@ networks:
       driver: default
       config:
         - subnet: 192.168.100.0/24
+  front_cypress_net:
+    driver: bridge
   front_api_net:
     driver: bridge
   api_redis_net:
@@ -20,11 +22,30 @@ services:
       # dockerfile: ./docker/front/Dockerfile.dev
       dockerfile: ./docker/front/Dockerfile.prod
     env_file: ./docker/front/.env.example
-
+    # cypress実行時のみ
+    # environment: 
+    #   - VITE_HMR_HOST=front
     ports:
       - "80:80"
     networks:
       front_api_net:
+      front_cypress_net:
+  cypress:
+    container_name: cypress
+    image: cypress/included:15.6.0
+    depends_on:
+      - front
+    networks:
+      front_cypress_net:
+    environment:
+      - CYPRESS_BASE_URL=http://front:80
+      # - CYPRESS_BASE_URL=http://localhost
+    working_dir: /cypress
+    volumes:
+      - ./front/cypress:/cypress
+      - ./front/node_modules:/cypress/node_modules
+    # Cypress実行コマンド
+    command: cypress open
 
   api:
     container_name: api

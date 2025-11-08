@@ -1,9 +1,9 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { verify } from "argon2";
-import prisma from "@/lib/prisma";
 import { Strategy as JWTStrategy, StrategyOptions } from "passport-jwt";
 import { CookieOptions } from "express";
+import { findUserByEmail, findUser } from "@/lib/prismaUser";
 
 // パスワードログイン用
 passport.use(
@@ -11,9 +11,7 @@ passport.use(
     { usernameField: "email" },
     async (email, password, done) => {
       try {
-        const user = await prisma.user.findUnique({
-          where: { email: email },
-        });
+        const user = await findUserByEmail(email);
 
         if (!user || !(await verify(user.password, password))) {
           console.log("LOGIN FAILED");
@@ -33,7 +31,7 @@ passport.use(
           return done(null, userInfo);
         } // 成功
       } catch (error) {
-        console.log("LOGIN CATCE ERROR");
+        console.log("LOGIN CATCHE ERROR");
 
         return done(error);
       }
@@ -53,9 +51,7 @@ const opts: StrategyOptions = {
 passport.use(
   new JWTStrategy(opts, async (jwtPayload, done) => {
     try {
-      const user = await prisma.user.findUnique({
-        where: { id: jwtPayload.sub },
-      });
+      const user = await findUser(jwtPayload.sub);
 
       if (!user) {
         console.log("JWT LOGIN FAILED");
