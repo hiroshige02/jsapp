@@ -22,5 +22,10 @@ export default defineConfig({
       host: process.env.VITE_HMR_HOST || "localhost", // ブラウザからの接続先
       clientPort: 80,
     },
+    allowedHosts: ["localhost", "front"],
+  },
+  preview: {
+    host: process.env.VITE_PREVIEW_HOST || "localhost",
+    port: Number(process.env.VITE_PREVIEW_PORT) || 80,
   },
 });

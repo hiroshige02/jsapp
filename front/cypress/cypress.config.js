@@ -10,5 +10,8 @@ export default defineConfig({
     specPattern: "**/*.cy.(ts|js)",
     videosFolder: "./videos",
     screenshotsFolder: "./screenshots",
+    env: {
+      API_BASE_URL: process.env.VITE_API_BASE_URL,
+    },
   },
 });

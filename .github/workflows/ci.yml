@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub CLI用クレデンシャル
+
+jobs:
+  # ========= front start =========
+  front:
+    name: front CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./front
+    permissions:
+      contents: read
+    env:
+      CYPRESS_BASE_URL: http://localhost:4173
+      VITE_PREVIEW_HOST: localhost
+      VITE_PREVIEW_PORT: 4173
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      # - name: Check PWD
+      #   run: pwd && ls -l
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: "npm"
+          cache-dependency-path: front/package-lock.json
+      - name: Install Dependencies
+        run: npm ci
+      # - name: Run ESLint and Type Checkout
+      #   run: npm run lint
+
+      - name: Build front
+        run: cp .env.example .env && npm run build
+
+      - name: Start Vite Server
+        run: npm run preview &
+
+      - name: Wait For Preview Server
+        run: npx wait-on "${CYPRESS_BASE_URL}"
+
+      - name: Run Cypress
+        run: npx cypress run --config-file cypress/cypress.config.js
+
+  # ========= front end =========
+
+  # ========= api start =========
+  # api:
+  #   name: api CI
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       working-directory: ./api
+  #   permissions:
+  #     contents: read
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v5
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v5
+  #       with:
+  #         node-version: 24
+  #         cache: "npm"
+  #         cache-dependency-path: api/package-lock.json
+  #     - name: Install Dependencies
+  #       run: npm ci
+  #     - name: Run ESLint and Type Checkout
+  #       run: npm run lint

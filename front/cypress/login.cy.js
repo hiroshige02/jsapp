@@ -1,8 +1,10 @@
 import { messages } from "@packages/shared";
 
+const API_BASE_URL = Cypress.env("API_BASE_URL");
+console.log(`API_BASE_URL *********: ${Cypress.env("API_BASE_URL")}`);
+console.log(`API_BASE_URL *********: ${API_BASE_URL}`);
+
 before(() => {
-  //   jest.clearAllMocks;
-  //   app = testApp();
   cy.intercept("GET", "http://localhost:3333/api/check", {
     statusCode: 400,
     body: { message: messages.authFailed },
