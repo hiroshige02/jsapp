@@ -39,7 +39,6 @@ services:
       front_cypress_net:
     environment:
       - CYPRESS_BASE_URL=http://front:80
-      # - CYPRESS_BASE_URL=http://localhost
     working_dir: /cypress
     volumes:
       - ./front/cypress:/cypress
