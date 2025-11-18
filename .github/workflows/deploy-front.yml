@@ -5,7 +5,6 @@ on:
     branches:
       - main # mainブランチにマージされた時 or mainブランチにプッシュされた時
   workflow_dispatch:
-
 env:
   ROLE_ARN: arn:aws:iam::${{ secrets.AWS_ID }}:role/${{ secrets.ROLE_NAME }}
   SESSION_NAME: gh-oidc-${{ github.run_id }}-${{ github.run_attempt }}
@@ -28,9 +27,8 @@ jobs:
           role-to-assume: ${{ env.ROLE_ARN }}
           role-session-name: ${{ env.SESSION_NAME }}
           aws-region: ap-northeast-1
-      # - run: aws iam list-users # 一時クレデンシャル利用
-      # - run: aws iam create-user --user-name invalid || true # 失敗パターン
-      # - run: echo "${env.SESSION_NAME}"
+      # - run: aws iam list-users # 一時クレデンシャル利用(接続確認用)
+      # - run: aws iam create-user --user-name invalid || true # (権限による失敗パターン確認用)
 
       - name: Checkout
         uses: actions/checkout@v5
