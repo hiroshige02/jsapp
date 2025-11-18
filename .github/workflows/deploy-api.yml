@@ -1,4 +1,4 @@
-name: Deploy front
+name: Deploy api
 
 on:
   push:
@@ -20,9 +20,6 @@ jobs:
     permissions:
       id-token: write # OIDCトークンの取得を許可
       contents: read
-    # defaults:
-    #   run:
-    #     working-directory: ./api
     env:
       AWS_ID: ${{ secrets.AWS_ID }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -30,8 +27,6 @@ jobs:
       ECR_IMAGE_TAG: ${{ secrets.ECR_IMAGE_TAG }}
       ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME }}
       ECS_CLUSTER_SERVICE_NAME: ${{ secrets.ECS_CLUSTER_SERVICE_NAME }}
-      # DOCKER_HUB_USER_NAME: ${{ secrets.DOCKER_HUB_USER_NAME }}
-      # DOCKER_HUB_USER_PASSWORD: ${{ secrets.DOCKER_HUB_USER_PASSWORD }}
     steps:
       - name: OpenID Connect
         uses: aws-actions/configure-aws-credentials@v4 # AWSの認証アクション
@@ -39,8 +34,10 @@ jobs:
           role-to-assume: ${{ env.ROLE_ARN }}
           role-session-name: ${{ env.SESSION_NAME }}
           aws-region: ap-northeast-1
+      
       - name: Checkout
         uses: actions/checkout@v5
+      
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
@@ -48,26 +45,26 @@ jobs:
 
       - name: Log in to Amazon ECR
         run: |
-          aws ecr get-login-password --region "${env.AWS_REGION}" \
+          aws ecr get-login-password --region "${AWS_REGION}" \
           | docker login --username AWS --password-stdin \
-          "${env.AWS_ID}".dkr.ecr."${env.AWS_REGION}.amazonaws.com
+          "${AWS_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com
 
       - name: Build Docker Image
         run: |
-          docker build -t "${env.ECR_REPOSITORY}":"${env.ECR_IMAGE_TAG}" \
-          -f docker/api/Dockerfile.prod .
+          docker build -t "${ECR_REPOSITORY}":"${ECR_IMAGE_TAG}" \
+          -f docker/api/Dockerfile.deploy .
 
       - name: Tag Docker Image
         run: |
-          docker tag "${env.ECR_REPOSITORY}":"${env.ECR_IMAGE_TAG}" \
-          "${env.AWS_ID}".dkr.ecr."${env.AWS_REGION}".amazonaws.com/"${env.ECR_REPOSITORY}":"${env.ECR_IMAGE_TAG}"
+          docker tag "${ECR_REPOSITORY}":"${ECR_IMAGE_TAG}" \
+          "${AWS_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPOSITORY}":"${ECR_IMAGE_TAG}"
 
       - name: Push Docker Image
-        run: docker push "${env.AWS_ID}".dkr.ecr."${env.AWS_REGION}".amazonaws.com/"${env.ECR_REPOSITORY}":"${env.ECR_IMAGE_TAG}"
+        run: docker push "${AWS_ID}".dkr.ecr."${AWS_REGION}".amazonaws.com/"${ECR_REPOSITORY}":"${ECR_IMAGE_TAG}"
 
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
-            --cluster "${env.ECS_CLUSTER_NAME}" \
-            --service "${env.ECS_CLUSTER_SERVICE_NAME}" \
+            --cluster "${ECS_CLUSTER_NAME}" \
+            --service "${ECS_CLUSTER_SERVICE_NAME}" \
             --force-new-deployment
