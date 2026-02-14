@@ -11,7 +11,6 @@ import {
   Button,
   Heading,
   Text,
-  Link,
   IconButton,
 } from "@chakra-ui/react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -21,12 +20,10 @@ import useApi from "@/lib/api";
 import { errorFormat } from "@/lib/errorFormat";
 import { useValidForm } from "@/lib/useValidForm";
 import { registerFormSchema, RegisterFormSchema } from "./schema";
-import {
-  LoadingContextType,
-  LoadingContext,
-} from "@/providers/LoadingProvider";
+import { LoadingContextType, LoadingContext } from "@/providers/LoagindContext";
 import { messages } from "@packages/shared";
 import { NavLink } from "react-router-dom";
+import { ValidationErrorResponse } from "@/types/response";
 
 // ユーザー登録
 const Register: FC = () => {
@@ -45,6 +42,7 @@ const Register: FC = () => {
   };
 
   type ValuesKey = keyof RegisterFormSchema;
+  type RegisterSuccessJson = { message: string };
 
   // バリデーション
   const { register, handleSubmit, errors, setError, clearErrors } =
@@ -59,18 +57,19 @@ const Register: FC = () => {
     try {
       // フォーム送信
       const res = await postMethod<RegisterFormSchema>(data, "register");
-      const resJson = await res.json();
+      const resJson = (await res.json()) as
+        | RegisterSuccessJson
+        | ValidationErrorResponse;
 
       if (res.ok) {
         // 成功時の処理
-        navigate("/login");
+        await navigate("/login");
         return;
       }
 
-      if (!resJson.errors || !resJson.errors.inner) {
+      if (!("errors" in resJson) || !("inner" in resJson.errors)) {
         // バリデーションエラー以外の失敗
         alert(messages.unexpectedError);
-        console.log(resJson);
         return;
       }
 
@@ -80,7 +79,7 @@ const Register: FC = () => {
       err.map((field) =>
         setError(field["name"] as ValuesKey, {
           message: field["messages"],
-        })
+        }),
       );
     } catch (err) {
       alert(messages.serverError);
@@ -99,7 +98,24 @@ const Register: FC = () => {
             Sign up
           </Heading>
         </Stack>
-        <form onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
+        <form
+          autoComplete="off"
+          onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+        >
+          {/* Chromeのautocomplete対策 */}
+          <input
+            type="email"
+            name="dummy-user-name"
+            autoComplete="dummy-username"
+            style={{ display: "none" }}
+          />
+          <input
+            type="password"
+            name="dummy-password"
+            autoComplete="new-password"
+            style={{ display: "none" }}
+          />
+
           <Box rounded={"lg"} bg="white" boxShadow={"lg"} p={8}>
             <Stack gap={4}>
               <HStack>
@@ -151,7 +167,12 @@ const Register: FC = () => {
                   Email address
                   <Field.RequiredIndicator />
                 </Field.Label>
-                <Input type="email" maxLength={255} {...register("email")} />
+                <Input
+                  type="email"
+                  maxLength={255}
+                  autoComplete="off"
+                  {...register("email")}
+                />
                 {errors.email?.message && (
                   <FormError messages={errors.email.message} />
                 )}
@@ -171,6 +192,7 @@ const Register: FC = () => {
                     type={showPassword ? "text" : "password"}
                     pr="3rem"
                     maxLength={255}
+                    autoComplete="off"
                     {...register("password")}
                   />
                   <IconButton
@@ -202,6 +224,7 @@ const Register: FC = () => {
                   <Input
                     type={showPasswordConf ? "text" : "password"}
                     pr="3rem"
+                    autoComplete="off"
                     {...register("passwordConfirm")}
                     onPaste={(e) => e.preventDefault()}
                   />
@@ -211,7 +234,7 @@ const Register: FC = () => {
                     right="0"
                     onClick={() =>
                       setShowPasswordConf(
-                        (showPasswordConf) => !showPasswordConf
+                        (showPasswordConf) => !showPasswordConf,
                       )
                     }
                   >

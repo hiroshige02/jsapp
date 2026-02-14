@@ -1,16 +1,6 @@
-import { createContext, ReactNode, FC, useState } from "react";
+import { ReactNode, FC, useState } from "react";
 import Loading from "@/components/Loading";
-
-/**
- * ローディング用のstate管理と部品を子コンポーネントに渡す
- */
-export type LoadingContextType = {
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-export const LoadingContext = createContext<LoadingContextType>({
-  setLoading: () => {},
-});
+import { LoadingContext } from "./LoagindContext";
 
 export const LoadingProvider: FC<{
   children: ReactNode;

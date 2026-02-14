@@ -1,12 +1,14 @@
+import { VerifyCookie } from "@/types/signedCookies";
 import { Request } from "express";
 import jwt from "jsonwebtoken";
 
 // JWTペイロード取得
 export const jwtVerify = (
-  req: Request
+  req: Request,
 ): jwt.JwtPayload | string | undefined => {
   // ログイン中のユーザーのIDを取得
-  const token = req.signedCookies?.token;
+  const cookies = req.signedCookies as VerifyCookie;
+  const token = cookies.token;
   try {
     return jwt.verify(token, process.env.JWT_SECRET!);
   } catch (error) {
@@ -17,5 +19,5 @@ export const jwtVerify = (
 
 // ログイン時のJWT token発行
 export const loginJwtSign = (payload: { sub: number }) => {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "1hr" }!);
+  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "1hr" });
 };

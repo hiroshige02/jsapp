@@ -1,18 +1,16 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { messages } from "@packages/shared";
-import { User } from "@/providers/AuthProvider";
+import { User } from "@/providers/AuthContext";
+import { useCallback } from "react";
 
 /**
  * 認証済のユーザー情報管理、画面遷移ごとの認証状態チェック
  */
 export const useCheckAuth = () => {
   const [authChecking, setAuthChecking] = useState<boolean>(true);
-  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authUser, setAuthUser] = useState<User | undefined>(undefined);
 
-  const location = useLocation();
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     // 認証チェック
     try {
       setAuthChecking(true);
@@ -22,7 +20,7 @@ export const useCheckAuth = () => {
       });
 
       if (res.status === 200) {
-        const resJson = await res.json();
+        const resJson = (await res.json()) as { user: User };
         const user = resJson.user;
         setAuthUser({
           firstName: user.firstName,
@@ -32,7 +30,7 @@ export const useCheckAuth = () => {
           isFido2Active: user.isFido2Active,
         });
       } else if (res.status !== 200) {
-        setAuthUser(null);
+        setAuthUser(undefined);
       }
     } catch (error) {
       alert(messages.serverError);
@@ -40,11 +38,11 @@ export const useCheckAuth = () => {
     } finally {
       setAuthChecking(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    void checkAuth();
+  }, [checkAuth]);
 
   return { authUser, setAuthUser, authChecking, checkAuth };
 };

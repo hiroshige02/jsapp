@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useCallback } from "react";
 
 import {
   Flex,
@@ -14,23 +14,24 @@ import {
 } from "@chakra-ui/react";
 import { useState, useContext, useEffect } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler } from "react-hook-form";
 import { loginFormSchema, LoginFormSchema } from "./schema";
 import { useValidForm } from "@/lib/useValidForm";
 import useApi from "@/lib/api";
 import { errorFormat } from "@/lib/errorFormat";
 import { useNavigate, NavLink } from "react-router-dom";
 import FormError from "@/components/FormError";
-import { AuthContextType, AuthContext } from "@/providers/AuthProvider";
-import {
-  LoadingContextType,
-  LoadingContext,
-} from "@/providers/LoadingProvider";
+import { AuthContextType, AuthContext } from "@/providers/AuthContext";
+import { LoadingContextType, LoadingContext } from "@/providers/LoagindContext";
 import { messages } from "@packages/shared";
 import {
   startAuthentication,
   AuthenticationResponseJSON,
+  PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/browser";
+import { LoginSuccessJson } from "./types";
+import { ErrorResponse, ValidationErrorResponse } from "@/types/response";
+import {} from "@/providers/AuthContext";
 
 // パスワードログイン画面
 const Login: FC = () => {
@@ -47,6 +48,7 @@ const Login: FC = () => {
     email: "",
     password: "",
   };
+
   const { register, handleSubmit, errors, setError, clearErrors } =
     useValidForm<LoginFormSchema>(defaultValues, loginFormSchema);
 
@@ -58,36 +60,40 @@ const Login: FC = () => {
 
     try {
       const res = await postMethod<LoginFormSchema>(data, "login", false);
-      if (res.ok) {
-        // 成功時の処理
-        const resJson = await res.json();
-        setAuthUser(resJson.user);
-        resJson.totpRequire
-          ? navigate("/login_input_code", { state: { fromLogin: true } })
-          : navigate("/home");
 
+      if (res.ok) {
+        const successResponse = (await res.json()) as LoginSuccessJson;
+
+        // 成功時の処理
+        setAuthUser(successResponse.user);
+        if (successResponse.totpRequire) {
+          await navigate("/login_input_code", { state: { fromLogin: true } });
+        } else {
+          await navigate("/home");
+        }
         return;
       }
 
       if (res.status === 409) {
-        const fieldErrors = res.errors.inner;
+        const errorJson = (await res.json()) as ValidationErrorResponse;
+        const fieldErrors = errorJson.errors.inner;
         const err = errorFormat(fieldErrors);
+
         err.map((field) =>
           setError(field["name"] as ValuesKey, {
             message: field["messages"],
-          })
+          }),
         );
       } else if (res.status === 401) {
         // 認証失敗
         setError("email", {});
         setError("password", { message: "ログインに失敗しました" });
       } else {
-        // ローディング解除
-        alert(messages.unexpectedError);
+        alert(messages.serverError);
         console.log(res);
       }
     } catch (err) {
-      alert(messages.serverError);
+      alert(messages.unexpectedError);
       console.log(err);
     } finally {
       // ローディング解除
@@ -107,32 +113,40 @@ const Login: FC = () => {
     try {
       const resp = await postMethod<undefined>(
         undefined,
-        "generate_fido2_auth_options"
+        "generate_fido2_auth_options",
       );
-      const respJson = await resp.json();
-      if (!resp.ok) {
-        alert(respJson.message);
+
+      const respJson = (await resp.json()) as
+        | ErrorResponse
+        | PublicKeyCredentialRequestOptionsJSON;
+      if (!resp.ok || !("options" in respJson)) {
+        alert((respJson as ErrorResponse).message);
         return;
       }
 
-      const options = respJson.options;
-      const authResp = await startAuthentication({ optionsJSON: options });
+      const options = respJson.options as PublicKeyCredentialRequestOptionsJSON;
+      const authResp = await startAuthentication({
+        optionsJSON: options,
+      });
+
       const result = await postMethod<AuthenticationResponseJSON>(
         authResp,
-        "fido2_login"
+        "fido2_login",
       );
 
-      const resultJson = await result.json();
-      // console.log("After verify: ", resultJson);
+      const resultJson = (await result.json()) as
+        | ErrorResponse
+        | { user: User };
+
       if (!result.ok) {
-        alert(resultJson.message + supportMessage);
+        alert((resultJson as ErrorResponse).message + supportMessage);
         return;
       }
 
-      setAuthUser(resultJson.user);
-      navigate("/home");
+      setAuthUser((resultJson as { user: User }).user);
+      await navigate("/home");
     } catch (error) {
-      console.log(error);
+      console.error(error);
       alert(messages.serverError + supportMessage);
     } finally {
       setLoading(false);
@@ -140,22 +154,22 @@ const Login: FC = () => {
   };
 
   // FIDO2ログインが可能か
-  const tryFido2Login = async () => {
+  const tryCheckFido2Login = useCallback(async () => {
     try {
       const res = await getMethod("check_fido2_login");
-      const resJson = await res.json();
+      const resJson = (await res.json()) as { fido2: boolean };
       if (!resJson.fido2) return;
-
       setShowFido2(true);
-      // fido2Login(); // TODO: FIDO2ログインのルート表示だけにするか、自動でFIDO2ログインさせるか
     } catch (error) {
+      console.log(error);
       alert(messages.serverError);
     }
-  };
+    // fido2Login(); // TODO: FIDO2ログインのルート表示だけにするか、自動でFIDO2ログインさせるか
+  }, [getMethod]);
 
   useEffect(() => {
-    tryFido2Login();
-  }, []);
+    void tryCheckFido2Login();
+  }, [tryCheckFido2Login]);
 
   return (
     <Flex align={"center"} justify={"center"} bg="gray.50">
@@ -166,6 +180,20 @@ const Login: FC = () => {
           </Heading>
         </Stack>
         <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} action="#">
+          {/* Chromeのautocomplete対策 */}
+          <input
+            type="email"
+            name="dummy-user-name"
+            autoComplete="dummy-username"
+            style={{ display: "none" }}
+          />
+          <input
+            type="password"
+            name="dummy-password"
+            autoComplete="new-password"
+            style={{ display: "none" }}
+          />
+
           <Box rounded={"lg"} bg="white" boxShadow={"lg"} p={8}>
             <Stack gap={4}>
               <Field.Root
@@ -243,7 +271,7 @@ const Login: FC = () => {
                 {showFido2 && (
                   <Text>
                     Login with FIDO2 ?{" "}
-                    <Link color={"blue.400"} onClick={() => fido2Login()}>
+                    <Link color={"blue.400"} onClick={() => void fido2Login()}>
                       Sign in
                     </Link>
                   </Text>

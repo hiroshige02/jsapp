@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Box, Center, Spinner } from "@chakra-ui/react";
+import { Box, Spinner } from "@chakra-ui/react";
 
 const Loading: FC = () => {
   return (

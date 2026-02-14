@@ -4,18 +4,23 @@ import { verify } from "argon2";
 import { Strategy as JWTStrategy, StrategyOptions } from "passport-jwt";
 import { CookieOptions } from "express";
 import { findUserByEmail, findUser } from "@/lib/prismaUser";
+import { SignedCookies } from "@/types/signedCookies";
+import { Request } from "express";
+import { JwtPayload } from "@/types/JWT";
 
 // パスワードログイン用
 passport.use(
-  new LocalStrategy(
-    { usernameField: "email" },
-    async (email, password, done) => {
+  new LocalStrategy({ usernameField: "email" }, (email, password, done) => {
+    void (async () => {
       try {
+        console.log("EMAIL: " + email);
+        console.log("PASSWORD: " + password);
         const user = await findUserByEmail(email);
+        console.log("USER: ", user);
 
         if (!user || !(await verify(user.password, password))) {
           console.log("LOGIN FAILED");
-          return done(null, false, { message: " Login failed" }); // 失敗
+          return done(null, false, { message: " Login failed" }); // ログイン失敗
         } else {
           console.log("PASSPORT LOGIN SUCCESS");
 
@@ -31,39 +36,44 @@ passport.use(
           return done(null, userInfo);
         } // 成功
       } catch (error) {
-        console.log("LOGIN CATCHE ERROR");
+        console.log("LOGIN CATCH ERROR");
 
         return done(error);
       }
-    }
-  )
+    })();
+  }),
 );
 
 // 認証用のJWT tokenはCookieから取得
-const cookieExtractor = (req: any) => {
-  return req.signedCookies?.token ? req.signedCookies.token : null;
+const cookieExtractor = (req: Request) => {
+  const cookies = req.signedCookies as SignedCookies;
+  return cookies.token ? cookies.token : null;
 };
+
 const opts: StrategyOptions = {
   jwtFromRequest: cookieExtractor,
   secretOrKey: process.env.JWT_SECRET!,
 };
+
 // JWT tokenログイン用
 passport.use(
-  new JWTStrategy(opts, async (jwtPayload, done) => {
-    try {
-      const user = await findUser(jwtPayload.sub);
+  new JWTStrategy(opts, (jwtPayload, done) => {
+    void (async () => {
+      try {
+        const user = await findUser((jwtPayload as JwtPayload).sub);
 
-      if (!user) {
-        console.log("JWT LOGIN FAILED");
-        return done(null, false, { message: "JWT Login failed" }); // 失敗
-      } else {
-        console.log("JWT LOGIN SUCCESS");
-        return done(null, user);
+        if (!user) {
+          console.log("JWT LOGIN FAILED");
+          return done(null, false, { message: "JWT Login failed" }); // 失敗
+        } else {
+          console.log("JWT LOGIN SUCCESS");
+          return done(null, user);
+        }
+      } catch (error) {
+        return done(error);
       }
-    } catch (error) {
-      return done(error);
-    }
-  })
+    })();
+  }),
 );
 
 export const cookieConfig: CookieOptions = {

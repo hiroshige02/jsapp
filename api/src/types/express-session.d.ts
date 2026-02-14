@@ -1,4 +1,4 @@
-import session from "express-session";
+import _session from "express-session";
 
 declare module "express-session" {
   interface SessionData {

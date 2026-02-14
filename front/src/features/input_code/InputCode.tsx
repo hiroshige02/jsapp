@@ -27,41 +27,46 @@ import { eachError, allError } from "@/lib/errorFormat";
 import useApi from "@/lib/api";
 import { codeSchema } from "@packages/shared";
 import { InferType } from "yup";
-import { useNavigate, useLocation, Navigate } from "react-router-dom";
-import { AuthContext, AuthContextType } from "@/providers/AuthProvider";
-import {
-  LoadingContextType,
-  LoadingContext,
-} from "@/providers/LoadingProvider";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AuthContext, AuthContextType } from "@/providers/AuthContext";
+import { LoadingContextType, LoadingContext } from "@/providers/LoagindContext";
 import { messages } from "@packages/shared";
+// TODO: 場所を移す
+import { SuccessUserJson } from "../auth_config/types";
+import { type ErrorResponse } from "@/types/response";
 
 // TOTPコード認証画面
-
-type CodeSchema = InferType<typeof codeSchema>;
 
 const InputCode: FC = () => {
   const { setAuthUser }: AuthContextType = useContext(AuthContext);
   const { setLoading }: LoadingContextType = useContext(LoadingContext);
-  const initialCode: CodeSchema = Array(6).fill("");
+  const initialCode: CodeSchema = Array<string | undefined>(6).fill("");
   const [codes, setCodes] = useState<CodeSchema>(initialCode);
-  const [toLogin, setToLogin] = useState<boolean>(false);
+  // const [toLogin, setToLogin] = useState<boolean>(false);
   const [error, setError] = useState<allError>([]);
   const { postMethod } = useApi();
   const navigate = useNavigate();
   const location = useLocation();
 
+  type LocationState = { fromLogin: boolean };
+  type CodeSchema = InferType<typeof codeSchema>;
+  type VerifyCodeValidError = { errors: ValidationError };
+
+  // TODO: 動作確認
+  const toLogin = location.pathname === "/login_input_code";
+
   useEffect(() => {
     // MFAログイン時の遷移か、TOTP設定時の遷移か
-    setToLogin(location.pathname === "/login_input_code");
+    // setToLogin(location.pathname === "/login_input_code");
     // ログイン時はURL直打ちでの遷移は許可しない。パスワード認証後の遷移のみ
-    if (toLogin && !location.state?.fromLogin) {
-      navigate("/login");
+    if (toLogin && !(location.state as LocationState).fromLogin) {
+      void navigate("/login");
     }
-  }, []);
+  }, [navigate, location.state, toLogin]);
 
   // コード入力用部品用
   const inputRefs = useRef<RefObject<HTMLInputElement | null>[]>(
-    Array.from({ length: 6 }, () => createRef<HTMLInputElement>())
+    Array.from({ length: 6 }, () => createRef<HTMLInputElement>()),
   );
 
   // const isNumeric = (newVal: string) => newVal.match(/^[0-9]{1}$/);
@@ -110,20 +115,12 @@ const InputCode: FC = () => {
     });
   };
 
-  const handleError = (err: any) => {
-    if (!err.errors || !err.errors.inner) {
-      // バリデーションエラー以外の失敗
-      setLoading(false);
-      console.log(err);
-      alert(messages.unexpectedError);
-      return;
-    }
-
+  const handleError = (err: VerifyCodeValidError) => {
     // バリデーションエラーをセット
     const errorBox: allError = [];
     const fieldErrors: ValidationError[] = err.errors.inner;
     for (let i = 0; i < fieldErrors.length; i++) {
-      const idx = (fieldErrors[i]["path"] as string).replace(/[\[\]]/g, "");
+      const idx = (fieldErrors[i]["path"] as string).replace(/[\\[\]]/g, "");
       const index = idx === "" ? "" : `${Number(idx) + 1}番目`;
 
       errorBox.push({
@@ -152,39 +149,50 @@ const InputCode: FC = () => {
 
       // 入力コード送信
       const res = await postMethod<CodeSchema>(codes, apiUrl);
-      const resJson = await res.json();
+      const resJson = (await res.json()) as
+        | SuccessUserJson
+        | ErrorResponse
+        | VerifyCodeValidError;
 
       if (res.ok) {
-        setAuthUser(resJson.user);
+        const successJson = resJson as SuccessUserJson;
+        setAuthUser(successJson.user);
         if (!toLogin) {
           // TOTP設定時
-          alert(resJson.message);
+          alert(successJson.message);
         }
-        navigate(redirectUrl);
+        await navigate(redirectUrl);
         return;
       }
 
-      if (res.status === 400) {
+      if (res.status === 409) {
+        const validErrors = resJson as VerifyCodeValidError;
+        handleError(validErrors);
+      } else if (res.status === 400) {
+        const authErrors = resJson as ErrorResponse;
         setError([
           {
             name: "",
-            messages: resJson.message,
+            messages: authErrors.message,
           } as eachError,
         ]);
       } else if (res.status === 500) {
-        alert(resJson.message);
-        navigate(toLogin ? "/login" : "/input_code");
+        const serverErrors = resJson as ErrorResponse;
+        alert(serverErrors.message);
+        await navigate(toLogin ? "/login" : "/input_code");
       } else {
-        handleError(resJson);
+        alert(messages.serverError);
       }
     } catch (err: any) {
       // フロントのバリデーションエラーはここに入る
       if (err instanceof ValidationError) {
-        err = {
-          errors: { inner: err.inner },
-        };
+        handleError({
+          errors: err,
+        });
+      } else {
+        console.error(err);
+        alert(messages.serverError);
       }
-      handleError(err);
     } finally {
       setLoading(false);
     }
@@ -206,7 +214,7 @@ const InputCode: FC = () => {
                   key={`code_${key}`}
                   invalid={
                     !!error.find(
-                      (er) => er.name === "[" + key + "]" || er.name === ""
+                      (er) => er.name === "[" + key + "]" || er.name === "",
                     )
                   }
                 >
@@ -239,7 +247,7 @@ const InputCode: FC = () => {
                 _hover={{
                   bg: "blue.500",
                 }}
-                onClick={() => onSubmit()}
+                onClick={() => void onSubmit()}
               >
                 Confirm code
               </Button>

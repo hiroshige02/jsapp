@@ -8,15 +8,18 @@ import { messages } from "@packages/shared";
 import speakeasy from "speakeasy";
 import { jwtVerify, loginJwtSign } from "@/lib/jwt";
 import { findUser } from "@/lib/prismaUser";
+import { RegisterFormSchema } from "@/lib/yup/schemas/register";
+import { VerifyTmpCookie } from "@/types/signedCookies";
 
 // ユーザー登録
 export const register = async (req: Request, res: Response) => {
-  const { firstName, lastName, email } = req.body;
-  const password = await hash(req.body.password);
+  const { firstName, lastName, email, password } =
+    req.body as RegisterFormSchema;
+  const hashedPassword = await hash(password);
 
   try {
     await prisma.user.create({
-      data: { firstName, lastName, email, password },
+      data: { firstName, lastName, email, password: hashedPassword },
     });
     res.status(200).json({ message: "Register success" });
   } catch (errors) {
@@ -25,7 +28,7 @@ export const register = async (req: Request, res: Response) => {
 };
 
 // パスワードログイン
-export const login = async (req: Request, res: Response) => {
+export const login = (req: Request, res: Response) => {
   const user = req.user as User;
 
   if (!user.isMfaActive) {
@@ -38,7 +41,7 @@ export const login = async (req: Request, res: Response) => {
     const jwtTmpToken = jwt.sign(
       { sub: user.id },
       process.env.JWT_TMP_SECRET!,
-      { expiresIn: "1m" }!
+      { expiresIn: "1m" },
     );
     res.cookie("tmpToken", jwtTmpToken, cookieConfig);
   }
@@ -53,7 +56,8 @@ export const login = async (req: Request, res: Response) => {
 // TOTPコード認証
 export const totpLogin = async (req: Request, res: Response) => {
   try {
-    const tmpToken = req.signedCookies?.tmpToken;
+    const signedCookies: VerifyTmpCookie = req.signedCookies;
+    const tmpToken = signedCookies.tmpToken;
     if (!tmpToken) {
       res.status(500).json({ message: "パスワードログインが必要です" });
       return;
@@ -67,7 +71,7 @@ export const totpLogin = async (req: Request, res: Response) => {
       return;
     }
 
-    const token = req.body.join("");
+    const token = (req.body as string[]).join("");
     const secret = user.twoFactorSecret;
 
     const verified = speakeasy.totp.verify({
@@ -109,6 +113,7 @@ export const check = async (req: Request, res: Response) => {
       user,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: messages.serverError });
   }
 };

@@ -14,11 +14,8 @@ import { Link as RouterLink } from "react-router-dom";
 import useApi from "@/lib/api";
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext, AuthContextType } from "@/providers/AuthProvider";
-import {
-  LoadingContextType,
-  LoadingContext,
-} from "@/providers/LoadingProvider";
+import { AuthContext, AuthContextType } from "@/providers/AuthContext";
+import { LoadingContextType, LoadingContext } from "@/providers/LoagindContext";
 import { messages } from "@packages/shared";
 
 interface Props {
@@ -60,8 +57,9 @@ export const Navbar = (): React.ReactNode => {
         return;
       }
       setAuthUser(null);
-      navigate("/login");
+      await navigate("/login");
     } catch (error) {
+      console.error(error);
       alert(messages.serverError);
     } finally {
       setLoading(false);
@@ -71,8 +69,8 @@ export const Navbar = (): React.ReactNode => {
   const { open, onOpen, onClose } = useDisclosure();
   const Links = [
     { text: "Home", linkTo: "/home", onClick: undefined },
-    { text: "Logout", linkTo: "#", onClick: logOut },
     { text: "Auth Config", linkTo: "/auth_config", onClick: undefined },
+    { text: "Logout", linkTo: "#", onClick: logOut },
   ];
 
   return (
@@ -94,7 +92,16 @@ export const Navbar = (): React.ReactNode => {
             <HStack as={"nav"} gap={4} display={{ base: "none", md: "flex" }}>
               {Links.map((link, idx) => (
                 <NavLink key={idx}>
-                  <RouterLink to={link.linkTo} onClick={link.onClick}>
+                  <RouterLink
+                    to={link.linkTo}
+                    onClick={() => {
+                      void (async () => {
+                        if (link.onClick) {
+                          await link.onClick();
+                        }
+                      })();
+                    }}
+                  >
                     {link.text}
                   </RouterLink>
                 </NavLink>
@@ -113,9 +120,13 @@ export const Navbar = (): React.ReactNode => {
                 <NavLink key={idx}>
                   <RouterLink
                     to={link.linkTo}
-                    onClick={async () => {
-                      link.onClick?.();
-                      onClose();
+                    onClick={() => {
+                      void (async () => {
+                        if (link.onClick) {
+                          await link.onClick();
+                        }
+                        onClose();
+                      })();
                     }}
                   >
                     <Text>{link.text}</Text>

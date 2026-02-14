@@ -1,7 +1,6 @@
 import express, { json, urlencoded } from "express";
 import session from "express-session";
 import passport from "passport";
-import dotenv from "dotenv";
 import authRoutes from "@/routes/authRoutes";
 import publicRoutes from "@/routes/publicRoutes";
 import "@/config/passportConfig";
@@ -26,7 +25,7 @@ export default () => {
       resave: false,
       saveUninitialized: false,
       cookie: cookieConfig,
-    })
+    }),
   );
 
   app.use(passport.initialize());

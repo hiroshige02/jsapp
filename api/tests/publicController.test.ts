@@ -1,21 +1,22 @@
 import * as prismaUser from "@/lib/prismaUser";
-import { hash } from "argon2";
 import request from "supertest";
 import testApp from "@/testApp";
+import { hash } from "argon2";
 import type { Express } from "express";
+import { User } from "@prisma/client";
 
 jest.setTimeout(10000);
 jest.mock("@/lib/prismaUser");
 
 let app: Express | null;
 
-beforeAll(async () => {
-  jest.clearAllMocks;
+beforeAll(() => {
+  jest.clearAllMocks();
   app = testApp();
 });
 
-afterAll(async () => {
-  jest.clearAllMocks;
+afterAll(() => {
+  jest.clearAllMocks();
   app = null;
 });
 
@@ -26,19 +27,30 @@ describe("/api/login #POST", () => {
   it("ログイン成功", async () => {
     const hashedPassword = await hash(userPassword);
 
-    const userInfo = {
+    const authUser: User = {
+      id: 1,
+      firstName: "momo",
+      lastName: null,
+      email,
+      password: hashedPassword,
+      isMfaActive: false,
+      isFido2Active: false,
+      twoFactorSecret: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const resUserInfo = {
       id: 1,
       firstName: "momo",
       lastName: null,
       email,
       isMfaActive: false,
       isFido2Active: false,
-      twoFactorSecret: false,
-      password: hashedPassword,
+      twoFactorSecret: null,
     };
-    const { password, ...resUserObj } = userInfo;
 
-    (prismaUser.findUserByEmail as jest.Mock).mockResolvedValue(userInfo);
+    (prismaUser.findUserByEmail as jest.Mock).mockResolvedValue(authUser);
     const res = await request(app as Express)
       .post("/api/login")
       .send({ email, password: userPassword });
@@ -47,7 +59,7 @@ describe("/api/login #POST", () => {
     expect(res.body).toMatchObject({
       message: "",
       totpRequire: false,
-      user: resUserObj,
+      user: resUserInfo,
     });
   });
 });

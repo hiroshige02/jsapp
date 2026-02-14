@@ -14,6 +14,7 @@ import {
 } from "@/controllers/fido2Controller";
 import { registerFormSchema } from "@/lib/yup/schemas/register";
 import { loginFormSchema } from "@/lib/yup/schemas/login";
+import { codeSchema } from "@packages/shared";
 
 const router = Router();
 
@@ -24,12 +25,13 @@ router.post("/register", validate(registerFormSchema), register);
 router.post(
   "/login",
   validate(loginFormSchema),
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   passport.authenticate("local", { session: false }),
-  login
+  login,
 );
 
 // TOTPコード認証
-router.post("/totp_login", totpLogin);
+router.post("/totp_login", validate(codeSchema), totpLogin);
 
 // FIDO2認証用オプション取得
 router.post("/generate_fido2_auth_options", generateFido2AuthOptions);
@@ -38,7 +40,12 @@ router.post("/generate_fido2_auth_options", generateFido2AuthOptions);
 router.post("/fido2_login", fido2Login);
 
 // 認証チェック
-router.get("/check", passport.authenticate("jwt", { session: false }), check);
+router.get(
+  "/check",
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  passport.authenticate("jwt", { session: false }),
+  check,
+);
 
 // ログイン画面でのFIDO2認証トリガー用
 router.get("/check_fido2_login", checkFido2Login);

@@ -1,5 +1,5 @@
 import { FC, useContext } from "react";
-import { AuthContext, AuthContextType } from "@/providers/AuthProvider";
+import { AuthContext, AuthContextType } from "@/providers/AuthContext";
 import { Box, Text } from "@chakra-ui/react";
 
 const Home: FC = () => {

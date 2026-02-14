@@ -3,9 +3,10 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
+import { defineConfig } from "eslint/config";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 
-export default tseslint.config(
+export default defineConfig([
   { ignores: ["dist"] },
   {
     files: ["**/*.{ts,tsx}"],
@@ -39,5 +40,5 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "off",
     },
   },
-  eslintConfigPrettier
-);
+  eslintConfigPrettier,
+]);

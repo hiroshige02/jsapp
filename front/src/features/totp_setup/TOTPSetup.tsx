@@ -1,15 +1,14 @@
-import { FC } from "react";
+import { FC, useCallback } from "react";
 
 import { Flex, Box, Stack, Button, Heading } from "@chakra-ui/react";
 import { useState, useEffect, useContext } from "react";
 import useApi from "@/lib/api";
 import { useNavigate } from "react-router-dom";
-import {
-  LoadingContextType,
-  LoadingContext,
-} from "@/providers/LoadingProvider";
+import { LoadingContextType, LoadingContext } from "@/providers/LoagindContext";
 import { messages } from "@packages/shared";
+import { ErrorResponse } from "@/types/response";
 
+type GetQRCodeSuccessJson = { QRCode: string };
 const TOTPSetup: FC = () => {
   const { setLoading }: LoadingContextType = useContext(LoadingContext);
   const { postMethod } = useApi();
@@ -17,31 +16,33 @@ const TOTPSetup: FC = () => {
   const [QRCodeDisplay, setQRCodeDisplay] = useState<string>("");
 
   // TOTPのQRコード表示
-  const getQRCode = async () => {
+  const getQRCode = useCallback(async () => {
     setLoading(true);
     try {
       // QRCode取得
       const res = await postMethod<undefined>(undefined, "auth/2fa/setup");
-      const resJson = await res.json();
-      // console.log("resJson: ", resJson);
+      const resJson = (await res.json()) as
+        | GetQRCodeSuccessJson
+        | ErrorResponse;
 
       if (res.ok) {
-        console.log("SUCCESS: ", resJson);
-        setQRCodeDisplay(resJson.QRCode);
+        const successJson = resJson as GetQRCodeSuccessJson;
+        setQRCodeDisplay(successJson.QRCode);
         return;
       }
-      alert(resJson.message);
+      const errorJson = resJson as ErrorResponse;
+      alert(errorJson.message);
     } catch (err) {
       alert(messages.serverError);
       console.log(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [postMethod, setLoading]);
 
   useEffect(() => {
-    getQRCode();
-  }, []);
+    void getQRCode();
+  }, [getQRCode]);
 
   return (
     <Flex align={"center"} justify={"center"} bg="gray.50">
@@ -70,7 +71,7 @@ const TOTPSetup: FC = () => {
                   bg: "blue.500",
                 }}
                 type="submit"
-                onClick={() => navigate("/input_code")}
+                onClick={() => void navigate("/input_code")}
               >
                 Activate TOTP
               </Button>

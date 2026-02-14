@@ -6,6 +6,9 @@ import qrCode from "qrcode";
 import { messages } from "@packages/shared";
 import { cookieConfig } from "@/config/passportConfig";
 import { frontSelectUser } from "@/lib/prismaUser";
+import { codeSchema } from "@packages/shared";
+import { InferType } from "yup";
+import { SessionData } from "express-session";
 
 // TOTPのQRコードを取得
 export const setup2FA = async (req: Request, res: Response) => {
@@ -32,10 +35,13 @@ export const setup2FA = async (req: Request, res: Response) => {
 
 // TOTP認証してMFAを設定
 export const verify2FA = async (req: Request, res: Response) => {
+  type CodeSchema = InferType<typeof codeSchema>;
+
   try {
-    const token = req.body.join(""); // 6つの数字の配列を文字列に
+    const token = (req.body as CodeSchema).join(""); // 6つの数字の配列を文字列に
     const user = req.user as User;
-    const secret = req.session.secret;
+    const secret = (req.session as SessionData).secret;
+
     if (!secret) {
       return res.status(400).json({ message: messages.authFailed });
     }
@@ -46,10 +52,6 @@ export const verify2FA = async (req: Request, res: Response) => {
       token,
       window: 1, // 1スロット(±30秒)のずれの許容
     });
-
-    // console.log("token: ", token);
-    // console.log("secret: ", secret);
-    // console.log("verified: ", verified);
 
     if (!verified) {
       res.status(400).json({ message: messages.authFailed });
@@ -113,7 +115,7 @@ export const reset2FA = async (req: Request, res: Response) => {
 };
 
 // ログアウト
-export const logout = async (_, res: Response) => {
+export const logout = (_, res: Response) => {
   res.clearCookie("token", cookieConfig);
   res.clearCookie("tmpToken", cookieConfig);
   res.sendStatus(200);

@@ -1,18 +1,18 @@
-import { FC, useContext } from "react";
+import { useContext, FC } from "react";
 import { Flex, Box, Stack, Button, Heading, Field } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import useApi from "@/lib/api";
-import {
-  LoadingContextType,
-  LoadingContext,
-} from "@/providers/LoadingProvider";
+import { LoadingContextType, LoadingContext } from "@/providers/LoagindContext";
 import { messages } from "@packages/shared";
 import {
   startRegistration,
   RegistrationResponseJSON,
+  PublicKeyCredentialCreationOptionsJSON,
 } from "@simplewebauthn/browser";
-import { AuthContext, AuthContextType } from "@/providers/AuthProvider";
+import { AuthContext, AuthContextType } from "@/providers/AuthContext";
 import FormError from "@/components/FormError";
+import { ErrorResponse } from "@/types/response";
+import { SuccessUserJson } from "./types";
 
 const AuthConfig: FC = () => {
   const { setLoading }: LoadingContextType = useContext(LoadingContext);
@@ -25,12 +25,13 @@ const AuthConfig: FC = () => {
 
     try {
       const res = await postMethod<undefined>(undefined, "auth/2fa/reset");
-      const resJson = await res.json();
+      const resJson = (await res.json()) as ErrorResponse | SuccessUserJson;
 
       if (res.ok) {
         // 成功時の処理
-        alert(resJson.message);
-        setAuthUser(resJson.user);
+        const successJson = resJson as SuccessUserJson;
+        alert(successJson.message);
+        setAuthUser(successJson.user);
         return;
       }
       alert(resJson.message);
@@ -49,29 +50,37 @@ const AuthConfig: FC = () => {
     try {
       const resp = await postMethod<undefined>(
         undefined,
-        "auth/generate_fido2_regist_options"
+        "auth/generate_fido2_regist_options",
       );
-      const respJson = await resp.json();
+      const respJson = (await resp.json()) as
+        | { options: PublicKeyCredentialCreationOptionsJSON }
+        | ErrorResponse;
+
+      console.log(respJson);
 
       if (!resp.ok) {
-        alert(respJson.message);
+        alert((respJson as ErrorResponse).message);
         return;
       }
 
-      const options = respJson.options;
+      const options = (
+        respJson as { options: PublicKeyCredentialCreationOptionsJSON }
+      ).options;
       const regResp = await startRegistration({
         optionsJSON: options,
       });
 
       const result = await postMethod<RegistrationResponseJSON>(
         regResp,
-        "auth/verify_fido2"
+        "auth/verify_fido2",
       );
-      const resultJson = await result.json();
+      const resultJson = (await result.json()) as
+        | ErrorResponse
+        | SuccessUserJson;
       alert(resultJson.message);
 
       if (!result.ok) return;
-      setAuthUser(resultJson.user);
+      setAuthUser((resultJson as SuccessUserJson).user);
     } catch (error) {
       console.log(error);
       alert(messages.fide2RegisterFailed);
@@ -86,12 +95,13 @@ const AuthConfig: FC = () => {
 
     try {
       const res = await postMethod<undefined>(undefined, "auth/reset_fido2");
-      const resJson = await res.json();
+      const resJson = (await res.json()) as ErrorResponse | SuccessUserJson;
 
       if (res.ok) {
         // 成功時の処理
-        alert(resJson.message);
-        setAuthUser(resJson.user);
+        const successJson = resJson as SuccessUserJson;
+        alert(successJson.message);
+        setAuthUser(successJson.user);
         return;
       }
       alert(resJson.message);
@@ -145,7 +155,9 @@ const AuthConfig: FC = () => {
                   bg: "blue.500",
                 }}
                 disabled={authUser?.isFido2Active || !authUser?.isMfaActive}
-                onClick={() => TOTPReset()}
+                onClick={() => {
+                  void TOTPReset();
+                }}
               >
                 TOTP Reset
               </Button>
@@ -172,7 +184,9 @@ const AuthConfig: FC = () => {
                   bg: "blue.500",
                 }}
                 disabled={!authUser?.isMfaActive || authUser.isFido2Active}
-                onClick={() => setupFIDO2()}
+                onClick={() => {
+                  void setupFIDO2();
+                }}
               >
                 FIDO2 Setup
               </Button>
@@ -188,7 +202,9 @@ const AuthConfig: FC = () => {
                   bg: "blue.500",
                 }}
                 disabled={!authUser?.isFido2Active}
-                onClick={() => FIDO2Reset()}
+                onClick={() => {
+                  void FIDO2Reset();
+                }}
               >
                 FIDO2 Reset
               </Button>

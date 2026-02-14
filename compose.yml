@@ -14,6 +14,7 @@ networks:
 
 volumes:
   db_store:
+  api_node_modules:
 
 services:
   front:
@@ -25,6 +26,8 @@ services:
     # cypress実行時のみ
     # environment: 
     #   - VITE_HMR_HOST=front
+    volumes:
+      - ./front:/app
     ports:
       - "80:80"
     networks:
@@ -55,6 +58,7 @@ services:
 
     volumes:
       - ./api:/app
+      - api_node_modules:/app/node_modules
     ports:
       - "3000:3000"
       - "3333:3333"
@@ -85,7 +89,7 @@ services:
 
   redis:
     container_name: redis
-    image: "redis:8.2"
+    image: redis:8.2
     ports:
       - "6379:6379"
     networks:

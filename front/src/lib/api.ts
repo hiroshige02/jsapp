@@ -1,7 +1,6 @@
 import { useContext, useCallback } from "react";
-import type { Response } from "express";
-import { NavigateFunction, useNavigate } from "react-router-dom";
-import { AuthContext, AuthContextType } from "@/providers/AuthProvider";
+import { useNavigate } from "react-router-dom";
+import { AuthContext, AuthContextType } from "@/providers/AuthContext";
 
 // APIアクセス用
 const useApi = () => {
@@ -9,29 +8,28 @@ const useApi = () => {
   const navigate = useNavigate();
 
   const getMethod = useCallback(
-    async (url: string, navigateToLogin: boolean = true): Response<any> => {
+    async (url: string, navigateToLogin: boolean = true): Promise<Response> => {
       const res = await fetch(`${process.env.VITE_API_BASE_URL}/${url}`, {
         method: "GET",
         credentials: "include",
       });
 
       if (res.status === 401 && navigateToLogin) {
-        setAuthUser(null);
-        navigate("/login");
-        return;
+        setAuthUser(undefined);
+        throw new Error("unauthorized. redirect to login.");
       }
 
       return res;
     },
-    [setAuthUser, navigate]
+    [setAuthUser],
   );
 
   const postMethod = useCallback(
     async <T>(
       data: T,
       url: string,
-      navigateToLogin: boolean = true
-    ): Promise<any> => {
+      navigateToLogin: boolean = true,
+    ): Promise<Response> => {
       const res = await fetch(`${process.env.VITE_API_BASE_URL}/${url}`, {
         method: "POST",
         headers: {
@@ -43,14 +41,15 @@ const useApi = () => {
       });
 
       if (res.status === 401 && navigateToLogin) {
-        setAuthUser(null);
-        navigate("/login");
-        return;
+        setAuthUser(undefined);
+        await navigate("/login");
+        console.log("UNAUTHORIZED");
+        throw new Error("unauthorized. redirect to login.");
       }
 
       return res;
     },
-    [setAuthUser, navigate]
+    [setAuthUser, navigate],
   );
 
   return { getMethod, postMethod };

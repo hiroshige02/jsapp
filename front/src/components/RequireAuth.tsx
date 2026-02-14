@@ -1,6 +1,6 @@
-import { ReactNode, useContext, FC, useEffect } from "react";
-import { Navigate, useNavigate, useLocation } from "react-router-dom";
-import { AuthContext, AuthContextType } from "@/providers/AuthProvider";
+import { ReactNode, useContext, FC } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { AuthContext, AuthContextType } from "@/providers/AuthContext";
 
 /**
  * 認証済ユーザー情報の取得状態、遷移先ルートで必要があればリダイレクトを行う
