@@ -19,6 +19,7 @@ import { fido2CookieConfig, cookieConfig } from "@/config/passportConfig";
 import { User } from "@prisma/client";
 import { SignedCookies } from "@/types/signedCookies";
 import { AuthenticationResponseJSON } from "@simplewebauthn/server";
+import { SessionData } from "express-session";
 
 // ************* FIDO2 **************
 
@@ -65,7 +66,7 @@ export const generateFido2RegistOptions = async (
       excludeCredentials: formatPasskeys,
       authenticatorSelection: {
         residentKey: "preferred",
-        userVerification: "discouraged",
+        userVerification: "required",
         authenticatorAttachment: "platform", // 'cross-platform'
         // https://simplewebauthn.dev/docs/packages/server#guiding-use-of-authenticators-via-authenticatorselection
       },
@@ -81,7 +82,7 @@ export const verifyFido2 = async (req: Request, res: Response) => {
   if (user.isMfaActive === false)
     return res.status(400).json({ message: "FIDO2設定前にTOTP設定が必要です" });
 
-  const options = req.session?.registOptions;
+  const options = (req.session as SessionData).registOptions;
   if (!options)
     return res.status(500).json({ message: messages.fide2RegisterFailed });
 
@@ -187,7 +188,7 @@ export const generateFido2AuthOptions = async (req: Request, res: Response) => {
           ",",
         ) as AuthenticatorTransportFuture[],
       })),
-      userVerification: "discouraged",
+      userVerification: "required",
     });
 
   req.session.authOptions = options;
@@ -217,6 +218,10 @@ export const fido2Login = async (req: Request, res: Response) => {
   }
 
   try {
+    console.log("passkey passkey passkey passkey");
+    console.log(passkey);
+    console.log("rpID: " + rpID);
+
     await verifyAuthenticationResponse({
       response: resBody,
       expectedChallenge: currentOptions.challenge,
@@ -238,6 +243,7 @@ export const fido2Login = async (req: Request, res: Response) => {
 
   const jwtToken = loginJwtSign({ sub: userAndPasskeys.id });
   res.cookie("token", jwtToken, cookieConfig);
+
   res.status(200).json({
     user: {
       firstName: userAndPasskeys.firstName,
