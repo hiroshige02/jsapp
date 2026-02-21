@@ -14,7 +14,7 @@ export const useCheckAuth = () => {
     // 認証チェック
     try {
       setAuthChecking(true);
-      const res = await fetch(`${process.env.VITE_API_BASE_URL}/check`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/check`, {
         method: "GET",
         credentials: "include",
       });

@@ -31,7 +31,7 @@ import {
 } from "@simplewebauthn/browser";
 import { LoginSuccessJson } from "./types";
 import { ErrorResponse, ValidationErrorResponse } from "@/types/response";
-import {} from "@/providers/AuthContext";
+import { User } from "@/providers/AuthContext";
 
 // パスワードログイン画面
 const Login: FC = () => {

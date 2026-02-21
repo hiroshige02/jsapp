@@ -13,10 +13,8 @@ passport.use(
   new LocalStrategy({ usernameField: "email" }, (email, password, done) => {
     void (async () => {
       try {
-        console.log("EMAIL: " + email);
-        console.log("PASSWORD: " + password);
         const user = await findUserByEmail(email);
-        console.log("USER: ", user);
+        // console.log("USER: ", user);
 
         if (!user || !(await verify(user.password, password))) {
           console.log("LOGIN FAILED");

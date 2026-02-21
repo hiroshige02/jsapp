@@ -43,6 +43,8 @@ $ prisma db seed
 ## 使用方法
 http://localhost/login で、<br>
 ①下記テスト用アカウントでパスワードログイン<br>
+　email: momo@example.com<br>
+　password: password<br>
 <img src="README_images/login.png" width="250px"><br><br>
 
 ②メニューでAuth Configに画面遷移し、TOTP設定を行う<br>
@@ -55,10 +57,7 @@ http://localhost/login で、<br>
 ④FIDO2設定後、アプリからログアウトすると<br>
 パスワード＋TOTP、またはFIDO2認証が可能<br>
 
-## テスト用アカウント
-email: momo@example.com<br>
-password: password<br>
-<br>
+## アカウント作成する場合
 新規アカウントを使う場合は、ログイン画面からリンク先の<br>
 アカウント登録画面でアカウント登録を行う<br>
 <img src="README_images/login(to register).png" width="250px"><br><br>

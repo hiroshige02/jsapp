@@ -218,9 +218,7 @@ export const fido2Login = async (req: Request, res: Response) => {
   }
 
   try {
-    console.log("passkey passkey passkey passkey");
-    console.log(passkey);
-    console.log("rpID: " + rpID);
+    const publicKeyBites = passkey.publicKey as unknown as Uint8Array;
 
     await verifyAuthenticationResponse({
       response: resBody,
@@ -229,7 +227,7 @@ export const fido2Login = async (req: Request, res: Response) => {
       expectedRPID: rpID,
       credential: {
         id: passkey.id,
-        publicKey: passkey.publicKey as Uint8Array,
+        publicKey: publicKeyBites,
         counter: passkey.counter,
         transports: passkey.transports?.split(
           ",",

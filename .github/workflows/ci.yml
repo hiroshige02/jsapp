@@ -35,8 +35,8 @@ jobs:
           cache-dependency-path: front/package-lock.json
       - name: Install Dependencies
         run: npm ci
-      # - name: Run ESLint and Type Checkout
-      #   run: npm run lint
+      - name: Run ESLint and Type Checkout
+        run: npm run lint
 
       - name: Build front
         run: cp .env.example .env && npm run build
@@ -53,24 +53,31 @@ jobs:
   # ========= front end =========
 
   # ========= api start =========
-  # api:
-  #   name: api CI
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: ./api
-  #   permissions:
-  #     contents: read
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v5
-  #     - name: Setup Node
-  #       uses: actions/setup-node@v5
-  #       with:
-  #         node-version: 24
-  #         cache: "npm"
-  #         cache-dependency-path: api/package-lock.json
-  #     - name: Install Dependencies
-  #       run: npm ci
-  #     - name: Run ESLint and Type Checkout
-  #       run: npm run lint
+  api:
+    name: api CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: "npm"
+          cache-dependency-path: api/package-lock.json
+      - name: Install Dependencies
+        run: npm ci
+      - name: Run ESLint and Type Checkout
+        run: npm run lint
+
+      - name: Run Jest
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+        run: npm run test

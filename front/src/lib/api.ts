@@ -9,7 +9,7 @@ const useApi = () => {
 
   const getMethod = useCallback(
     async (url: string, navigateToLogin: boolean = true): Promise<Response> => {
-      const res = await fetch(`${process.env.VITE_API_BASE_URL}/${url}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/${url}`, {
         method: "GET",
         credentials: "include",
       });
@@ -30,7 +30,7 @@ const useApi = () => {
       url: string,
       navigateToLogin: boolean = true,
     ): Promise<Response> => {
-      const res = await fetch(`${process.env.VITE_API_BASE_URL}/${url}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/${url}`, {
         method: "POST",
         headers: {
           // Authorization: `Bearer ${token}`, // HTTP Only Cookieに格納のため不要
